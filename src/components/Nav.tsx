@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MenuIcon, CloseIcon, ExternalLinkIcon } from "./icons";
+import SiteSwitcher from "./SiteSwitcher";
 
 const links = [
   { href: "/", label: "Domů" },
@@ -15,9 +16,7 @@ export default function Nav() {
 
   return (
     <header className="nav-apple">
-      <a href="/" className="text-sm font-semibold tracking-tight" style={{ color: "var(--text)" }}>
-        Petr Piskáček
-      </a>
+      <SiteSwitcher current="online" />
 
       <ul className="hidden items-center gap-8 md:flex">
         {links.map((link) => (
