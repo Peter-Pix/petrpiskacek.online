@@ -1,58 +1,64 @@
 import { NextRequest, NextResponse } from "next/server";
-import { buildContextForPrompt, findContext, PROJECTS, SITE_SECTIONS } from "@/lib/site-content";
+import {
+  buildContextForPrompt,
+  classifyQuestion,
+  findContext,
+  PROJECTS,
+  typeDirective,
+  type QuestionType,
+} from "@/lib/site-content";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "anthropic/claude-sonnet-5";
 
-const CHARACTER_PROMPT = `Jsi Průvodce příběhem Petra Piskáčka. Znáš jeho projekty, víš proč je dělá, mluvíš česky jako člověk.
+// Echo — hlas stránky, ne asistent. Krátký, autentický, reaguje na otázku.
+const CHARACTER_PROMPT = `Jsi Echo — hlas stránky petrpiskacek.online. Ne asistent, ne průvodce. Něco jako kamarád, co tu stránku psal.
 
-KDO JSI:
-- Hlas téhle stránky. Ne generický AI asistent.
-- Člověk, co to psaní má v malíčku a ví, o čem mluví.
-- Něco mezi kamarádem a průvodcem — zvídavý, vtipný, ne nabubřelý.
+PRAVIDLA (tvůj úspěch = dodržet je):
 
-PRAVIDLA (tvůj úspěch závisí na tom, že je dodržíš):
-
-1. KRÁTCE. 1-3 věty, VŽDY. Žádné romány. Když to přesáhne 3 věty, zkrátíš.
-2. ODPOVÍDEJ NA OTÁZKU. Když se ptají "ahoj" → "ahoj, co tě zajímá?". Když řeknou "čum" → "jo, super. A co tě fakt zajímá?". NEVYPRÁVĚJ O SOBĚ.
-3. Když dostaneš PAGE CONTEXT, mluv O TOM. To je to, co si zrovna prohlížej.
-4. Na nesrozumitelný vstup (gibberish, 1-2 slova) → krátce se zeptej co tím myslí. S humorem, ne nabubřele.
-5. Na vulgární vstup → klidně, lidsky, ne moralizuj. "Hm, tak to asi nebudeme řešit. Co tě fakt zajímá?"
+1. MAX 2 VĚTY. VŽDY. Když to přesáhne 2 věty, zkrátíš.
+2. ODPOVÍDEJ NA OTÁZKU. Když se ptají "ahoj" → "Ahoj, co tě zajímá?". Když řeknou "čum" → "Jo, super. A co tě fakt zajímá?". NEVYPRÁVĚJ O SOBĚ.
+3. Když dostaneš PAGE CONTEXT, mluv O TOM. Když je to suggestion typu, dodrž TYPE DIRECTIVE.
+4. Na nesrozumitelný vstup (gibberish, 1-2 slova) → "To bylo krátký. Co tím myslíš?"
+5. Na vulgární vstup → "Hm, tak to asi nebudeme řešit. Co tě fakt zajímá?"
 6. NIKDY neříkej "jako AI", "jsem AI", "nemám názor". Jsi hlas stránky, ne robot.
-7. Když nevíš, řekni "nevím". Nevymýšlej si fakta o projektech, co nejsou v contextu.
-8. Neprodávej. Petr neprodává AI, on ukazuje co s ní jde dělat.
-9. Drž se češtiny. Piš přirozeně, jako člověk, ne jako překlad z angličtiny.
+7. Když nevíš, řekni "nevím". Nevymýšlej si fakta.
+8. Piš česky, přirozeně, jako člověk, ne jako překlad z angličtiny.
+9. Žádné odrážky, žádné seznamy, žádné "Zde je 5 důvodů".
+10. Na konci můžeš položit jednu krátkou otázku zpátky, ale ne vždycky. Někdy prostě odpověz.
 
-FORMÁT ODPOVĚDI:
-- Krátké věty, přirozený rytmus
-- Žádné odrážky, žádné "Zde je 5 důvodů proč..."
-- Na konec se můžeš zeptat na něco dál, ale vždycky jen jednu otázku
+Příklady dobrých odpovědí:
+- "VocalBrain vznikl z frustrace, že psát poznámky ručně je otrava. Druhej den pozná, že mluvíš o tom samým projektu."
+- "Scrollo běží všechno v prohlížeči. Žádná databáze, žádný tracking. Petr to udělal, protože ho štvalo, že všechny free nástroje maj reklamy."
+- "Přes 1200 interpretů a skoro 6000 vazeb. Petr říká, že je to k ničemu. A v tom je ta krása."
 
-Když dostaneš PAGE CONTEXT o projektu:
-- Vysvětli 1-2 větami CO to je
-- Přidej PROČ to vzniklo (to je to zajímavý)
-- Nabídni co dál (jiný projekt, jinej úhel, otázka)
+Příklady špatných odpovědí:
+- "Jsem rád, že se ptáš! Toto je zajímavá otázka. Dovolte mi, abych vám poskytl podrobný přehled..."
+- "AI je fascinující technologie, která mění svět. V kontextu projektu..." (mluvíš o sobě, ne o projektu)
+- "Existuje několik důvodů, proč..." (seznam = špatně)`;
 
-Když dostaneš PAGE CONTEXT o sekci (příběh, přesvědčení):
-- Shrň to 1 větou
-- Přidej něco navíc, co tam není na první pohled
-- Nabídni směr`;
+const TYPE_CONTEXT: Record<QuestionType, string> = {
+  fact: "fakt",
+  why: "proč",
+  how: "jak",
+  wow: "wow",
+  next: "co dál",
+};
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { messages, clickedContext } = body;
+    const { messages, clickedContext, questionType, continueFrom } = body;
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: "Neplatný formát." }, { status: 400 });
     }
 
-    // Get last user message for quick local handling
     const lastMsg = messages[messages.length - 1];
     const userText = (lastMsg?.content || "").trim();
     const userLower = userText.toLowerCase();
 
-    // Quick replies for obvious cases — saves tokens
+    // Quick replies — client-side už většinu pokryje, ale tohle je pojistka.
     if (userText.length === 0) {
       return NextResponse.json({ replies: ["Napiš něco."] });
     }
@@ -62,7 +68,6 @@ export async function POST(req: NextRequest) {
     if (["čum", "kunda", "píča", "pica", "kokot", "prdel", "hovno"].includes(userLower)) {
       return NextResponse.json({ replies: ["Hm. Tak to asi nebudeme řešit. Co tě fakt zajímá?"] });
     }
-    // Krátké slovo bez diakritiky, nejasné
     if (userLower.length <= 3 && !/[a-záčďéěíňóřšťúůýž]{2,}/i.test(userLower)) {
       return NextResponse.json({ replies: ["To bylo krátký. Co tím myslíš?"] });
     }
@@ -72,9 +77,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Chybí API klíč." }, { status: 500 });
     }
 
-    // Sestavení page contextu pro system prompt.
-    // Dvě cesty: buď přišel clickedContext z frontendu (přesnější),
-    // nebo si vytáhneme z textu dotazu (fallback).
+    // Sestavení page contextu.
     let pageContext = "";
     if (clickedContext) {
       pageContext = buildContextForPrompt(clickedContext.section, clickedContext.project);
@@ -83,10 +86,24 @@ export async function POST(req: NextRequest) {
       pageContext = buildContextForPrompt(found.section, found.project);
     }
 
-    // Krátký system prompt — méně = lépe.
+    // Klasifikace typu otázky. Frontend může poslat hint, fallback na heuristiku.
+    const type: QuestionType = questionType || classifyQuestion(userText);
+    const directive = typeDirective(type);
+
+    // Pokud user chce pokračovat ("Více"), řekneme modelu ať rozšíří poslední odpověď.
+    const continueDirective = continueFrom
+      ? "\n\nPOKRAČUJ: User chce slyšet víc k předchozí odpovědi. Přidej 1-2 další věty, NE opakuj to samý. Jdi do hloubky, ne do šířky."
+      : "";
+
     const systemContent = pageContext
-      ? `${CHARACTER_PROMPT}\n\nPAGE CONTEXT (k tomuhle se uživatel zrovna kouká / ptá):\n${pageContext}`
-      : `${CHARACTER_PROMPT}\n\nPAGE INDEX (pro referenci, kdyby se zeptal):\n${SITE_SECTIONS.map((s) => `- ${s.title}: ${s.summary}`).join("\n")}\nProjekty: ${PROJECTS.map((p) => `${p.name} (${p.id})`).join(", ")}`;
+      ? `${CHARACTER_PROMPT}\n\nPAGE CONTEXT:\n${pageContext}\n\nTYPE DIRECTIVE: ${directive}${continueDirective}\n\nOdpověz typem: ${TYPE_CONTEXT[type]}.`
+      : `${CHARACTER_PROMPT}\n\nTYPE DIRECTIVE: ${directive}${continueDirective}\n\nPAGE INDEX:\n${PROJECTS.map((p) => `${p.name} (${p.id})`).join(", ")}\nSekce: ${["hero", "story", "beliefs", "projects"].join(", ")}`;
+
+    // Sestavíme konverzaci. Pokud jde o continue, posíláme poslední user+assistant pár.
+    const recentMessages = messages.slice(-4).map((m: { role: string; content: string }) => ({
+      role: m.role,
+      content: m.content,
+    }));
 
     const response = await fetch(OPENROUTER_URL, {
       method: "POST",
@@ -94,20 +111,17 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
         "HTTP-Referer": "https://petrpiskacek.online",
-        "X-Title": "petrpiskacek.online Story Guide",
+        "X-Title": "petrpiskacek.online Echo",
       },
       body: JSON.stringify({
         model: MODEL,
         messages: [
           { role: "system", content: systemContent },
-          // Trim history — jen posledních 6 zpráv, ať se to neprodraží.
-          ...messages.slice(-6).map((m: { role: string; content: string }) => ({
-            role: m.role,
-            content: m.content,
-          })),
+          ...recentMessages,
         ],
         temperature: 0.7,
-        max_tokens: 200, // krátké odpovědi
+        max_tokens: 100, // tvrdý strop — 2 věty
+        stream: false, // žádný streaming — celá odpověď najednou
       }),
     });
 
@@ -130,7 +144,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Prázdná odpověď." }, { status: 502 });
     }
 
-    // Split by newlines, ale drž to pod 3 řádky
+    // Split na řádky, max 3 (typicky 1-2)
     const replies = reply
       .split(/\n+/)
       .map((s: string) => s.trim())
