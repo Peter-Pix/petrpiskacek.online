@@ -69,16 +69,17 @@ export default function SiteSwitcher({ current }: SiteSwitcherProps) {
       </button>
 
       {open && (
-        // Wrapper obsahuje tlačítko + bridge + dropdown, takže celá oblast drží hover.
-        // Bridge je 16px vysoký neviditelný element mezi tlačítkem a dropdownem,
-        // který vyplní mezeru — user může přejet myší bez ztráty hoveru.
+        // Bridge vyplní celou mezeru mezi tlačítkem a dropdownem.
+        // Je to neviditelná zóna, která spojuje tlačítko s dropdownem,
+        // takže myš může přejet bez ztráty hoveru. Překrývá se
+        // s dropdownem o 8px, aby nebyla mezera.
         <>
           <div
-            className="absolute left-0 right-0 top-full h-4 z-10"
+            className="absolute left-0 right-0 top-full h-[22px] z-10"
             aria-hidden="true"
           />
           <div
-            className="absolute left-0 top-full mt-3 w-64 rounded-xl border p-2 shadow-xl z-20"
+            className="absolute left-0 top-full mt-[14px] w-64 rounded-xl border p-2 shadow-xl z-20"
             style={{
               borderColor: "var(--border)",
               backgroundColor: "var(--bg-secondary)",
