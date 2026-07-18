@@ -21,7 +21,7 @@ export default function Beliefs() {
   ];
 
   return (
-    <section id="presvedceni" className="section-apple">
+    <section data-context-section="beliefs" id="presvedceni" className="section-apple">
       <div className="container-read">
         <p className="eyebrow mb-3">Přesvědčení</p>
         <h2 className="headline-lg mb-8">V co věřím</h2>

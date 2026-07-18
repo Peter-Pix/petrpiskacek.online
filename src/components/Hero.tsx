@@ -29,7 +29,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="hero-bg relative flex min-h-[100svh] flex-col items-center justify-center px-5 pt-20 text-center">
+    <section data-context-section="hero" className="hero-bg relative flex min-h-[100svh] flex-col items-center justify-center px-5 pt-20 text-center">
       <div className="hero-grid" aria-hidden="true" />
 
       <div className="container-narrow relative z-10">

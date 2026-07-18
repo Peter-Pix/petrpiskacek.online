@@ -52,7 +52,7 @@ const projects = [
 
 export default function Projects() {
   return (
-    <section id="projekty" className="section-apple">
+    <section data-context-section="projects" id="projekty" className="section-apple">
       <div className="container-read">
         <p className="eyebrow mb-3">Projekty</p>
         <h2 className="headline-lg mb-4">Co jsem postavil</h2>
@@ -64,8 +64,10 @@ export default function Projects() {
           {projects.map((project, i) => (
             <div
               key={project.id}
-              className="glass-card p-6 md:p-8 animate-fade-in-up"
+              data-context-project={project.id}
+              className="glass-card cursor-pointer p-6 md:p-8 animate-fade-in-up transition-colors hover:border-gold"
               style={{ animationDelay: `${i * 0.1}s` }}
+              title="Klikni a zeptej se na tenhle projekt"
             >
               <h3 className="mb-3 text-lg font-semibold">
                 {project.link ? (
