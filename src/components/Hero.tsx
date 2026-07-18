@@ -50,16 +50,14 @@ export default function Hero() {
           </div>
 
           <h1 className="headline-xl mb-8 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
-            Nejsem tady, abych ti prodal AI.
+            Nejsem tady, abych prodal AI.
           </h1>
 
           <p
             className="subhead mx-auto mb-6 max-w-2xl animate-fade-in-up"
             style={{ animationDelay: "0.2s" }}
           >
-            Jsem tady, abych ti ukázal, co s ní jde dělat.
-            <br />
-            A proč si myslím, že to má smysl.
+            Jsem tady, abych ukázal, co umí.
           </p>
 
           <p

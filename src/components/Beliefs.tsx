@@ -5,8 +5,8 @@ import { EchoTrigger } from "./ChatBot";
 export default function Beliefs() {
   const beliefs = [
     {
-      title: "AI není zlý ani hodný",
-      text: "Je to jenom nástroj, stejně jako kladívko, s kterým dokážeme spoustu věcí postavit, ale taky spoustu věcí rozbít. AI dokáže znásobit myšlenku a zefektivnit práci tak jako nikdy nic předtím.",
+      title: "Ani zlý, ani hodný.",
+      text: "Jen myšlenka a rychlostroj. (Jen ty a tvůj nástroj.)",
     },
     {
       title: "Neudělá to za tebe. Udělá to, co mu řekneš.",
