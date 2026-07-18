@@ -62,10 +62,10 @@ export default function SiteSwitcher({ current }: SiteSwitcherProps) {
     >
       <button
         onClick={() => setOpen((v) => !v)}
-        className="text-sm font-semibold tracking-tight transition-colors hover:text-gold"
+        className="relative -m-3 rounded-xl p-3 text-sm font-semibold tracking-tight transition-colors hover:text-gold"
         style={{ color: "var(--text)" }}
       >
-        Petr Piskáček
+        <span className="pointer-events-none">Petr Piskáček</span>
       </button>
 
       {open && (
