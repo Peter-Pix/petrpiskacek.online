@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { EchoTrigger } from "./ChatBot";
 
 export default function Hero() {
   const textRef = useRef<HTMLDivElement>(null);
@@ -43,6 +44,10 @@ export default function Hero() {
           <p className="eyebrow mb-4 animate-fade-in-up" style={{ color: "var(--gold)" }}>
             Petr Piskáček
           </p>
+
+          <div className="mb-4 flex justify-center">
+            <EchoTrigger sectionId="hero" />
+          </div>
 
           <h1 className="headline-xl mb-8 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
             Nejsem tady, abych ti prodal AI.

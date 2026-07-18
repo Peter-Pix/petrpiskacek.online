@@ -1,12 +1,16 @@
 "use client";
 
 import { QuoteIcon } from "./icons";
+import { EchoTrigger } from "./ChatBot";
 
 export default function Story() {
   return (
-    <section id="pribeh" className="section-apple">
+    <section data-context-section="story" id="pribeh" className="section-apple">
       <div className="container-read">
-        <p className="eyebrow mb-3">Příběh</p>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="eyebrow">Příběh</p>
+          <EchoTrigger sectionId="story" />
+        </div>
         <h2 className="headline-lg mb-8">Jak jsem se sem dostal</h2>
 
         <div className="longform">

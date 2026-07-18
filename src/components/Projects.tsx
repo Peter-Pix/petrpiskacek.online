@@ -1,6 +1,7 @@
 "use client";
 
 import { ExternalLinkIcon } from "./icons";
+import { EchoTrigger } from "./ChatBot";
 
 const projects = [
   {
@@ -54,7 +55,10 @@ export default function Projects() {
   return (
     <section data-context-section="projects" id="projekty" className="section-apple">
       <div className="container-read">
-        <p className="eyebrow mb-3">Projekty</p>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="eyebrow">Projekty</p>
+          <EchoTrigger sectionId="projects" />
+        </div>
         <h2 className="headline-lg mb-4">Co jsem postavil</h2>
         <p className="subhead mb-12">
           Každej projekt má svůj příběh. Tady je vysvětlenej lidsky — ne technicky.
@@ -65,25 +69,27 @@ export default function Projects() {
             <div
               key={project.id}
               data-context-project={project.id}
-              className="glass-card cursor-pointer p-6 md:p-8 animate-fade-in-up transition-colors hover:border-gold"
+              className="glass-card relative p-6 md:p-8 animate-fade-in-up transition-colors hover:border-gold"
               style={{ animationDelay: `${i * 0.1}s` }}
-              title="Klikni a zeptej se na tenhle projekt"
             >
-              <h3 className="mb-3 text-lg font-semibold">
-                {project.link ? (
-                  <a
-                    href={project.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 hover:text-gold transition-colors"
-                  >
-                    {project.name}
-                    <ExternalLinkIcon size={14} />
-                  </a>
-                ) : (
-                  project.name
-                )}
-              </h3>
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <h3 className="text-lg font-semibold">
+                  {project.link ? (
+                    <a
+                      href={project.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 hover:text-gold transition-colors"
+                    >
+                      {project.name}
+                      <ExternalLinkIcon size={14} />
+                    </a>
+                  ) : (
+                    project.name
+                  )}
+                </h3>
+                <EchoTrigger projectId={project.id} />
+              </div>
               <div className="longform">
                 <p>{project.description}</p>
                 <p className="mt-4" style={{ color: "var(--text-muted)" }}>

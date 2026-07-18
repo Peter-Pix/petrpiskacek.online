@@ -1,5 +1,7 @@
 "use client";
 
+import { EchoTrigger } from "./ChatBot";
+
 export default function Beliefs() {
   const beliefs = [
     {
@@ -23,7 +25,10 @@ export default function Beliefs() {
   return (
     <section data-context-section="beliefs" id="presvedceni" className="section-apple">
       <div className="container-read">
-        <p className="eyebrow mb-3">Přesvědčení</p>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="eyebrow">Přesvědčení</p>
+          <EchoTrigger sectionId="beliefs" />
+        </div>
         <h2 className="headline-lg mb-8">V co věřím</h2>
 
         <div className="space-y-8">

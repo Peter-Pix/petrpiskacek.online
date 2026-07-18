@@ -5,17 +5,20 @@ import Beliefs from "@/components/Beliefs";
 import Projects from "@/components/Projects";
 import Footer from "@/components/Footer";
 import ChatBot from "@/components/ChatBot";
+import { EchoProvider } from "@/lib/echo-context";
 
 export default function Home() {
   return (
-    <main className="relative">
-      <Nav />
-      <Hero />
-      <Story />
-      <Beliefs />
-      <Projects />
-      <Footer />
-      <ChatBot />
-    </main>
+    <EchoProvider>
+      <main className="relative">
+        <Nav />
+        <Hero />
+        <Story />
+        <Beliefs />
+        <Projects />
+        <Footer />
+        <ChatBot />
+      </main>
+    </EchoProvider>
   );
 }
