@@ -1,10 +1,57 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EchoTrigger } from "./ChatBot";
+
+// A/B test varianty pro hero headline
+const VARIANTS = {
+  A: {
+    eyebrow: "Petr Piskáček",
+    line1: "Nejsem tady, abych prodal AI.",
+    line2: "Jsem tady, abych ukázal, co umí.",
+  },
+  B: {
+    eyebrow: "Petr Piskáček",
+    line1: "Žádná magie.",
+    line2: "Nový nástroj. Ukážu ti, jak to dělám.",
+  },
+};
+
+// Rotující části pro variantu A (Apple keynotes styl)
+const ROTATING_PARTS_A = [
+  "Nejsem tady, abych prodal AI.",
+  "Jsem tady, abych ukázal...",
+  "co umí.",
+];
+
+// Rotující části pro variantu B
+const ROTATING_PARTS_B = [
+  "Žádná magie.",
+  "Nový nástroj.",
+  "Ukážu ti, jak to dělám.",
+];
+
+function getABVariant(): "A" | "B" {
+  if (typeof window === "undefined") return "A";
+  
+  const stored = localStorage.getItem("ab_hero_variant");
+  if (stored === "A" || stored === "B") return stored;
+  
+  // 50/50 split
+  const variant = Math.random() < 0.5 ? "A" : "B";
+  localStorage.setItem("ab_hero_variant", variant);
+  return variant;
+}
 
 export default function Hero() {
   const textRef = useRef<HTMLDivElement>(null);
+  const [variant, setVariant] = useState<"A" | "B">("A");
+  const [rotatingIndex, setRotatingIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    setVariant(getABVariant());
+  }, []);
 
   useEffect(() => {
     const text = textRef.current;
@@ -29,6 +76,22 @@ export default function Hero() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Rotace textu každých 3.5 sekundy
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setRotatingIndex((prev) => (prev + 1) % (variant === "A" ? ROTATING_PARTS_A.length : ROTATING_PARTS_B.length));
+        setIsAnimating(false);
+      }, 300); // fade out duration
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [variant]);
+
+  const parts = variant === "A" ? ROTATING_PARTS_A : ROTATING_PARTS_B;
+  const currentText = parts[rotatingIndex];
+
   return (
     <section data-context-section="hero" className="hero-bg relative flex min-h-[100svh] flex-col items-center justify-center px-5 pt-20 text-center">
       <div className="hero-grid" aria-hidden="true" />
@@ -42,31 +105,33 @@ export default function Hero() {
           }}
         >
           <p className="eyebrow mb-4 animate-fade-in-up" style={{ color: "var(--gold)" }}>
-            Petr Piskáček
+            {VARIANTS[variant].eyebrow}
           </p>
 
           <div className="mb-4 flex justify-center">
             <EchoTrigger sectionId="hero" />
           </div>
 
-          <h1 className="headline-xl mb-8 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
-            Nejsem tady, abych prodal AI.
-          </h1>
+          {/* Headline s rotujícím textem */}
+          <div className="relative h-24 mb-8 overflow-hidden">
+            <h1
+              className={`headline-xl absolute inset-0 flex items-center justify-center transition-all duration-300 ${
+                isAnimating ? "opacity-0 -translate-y-4" : "opacity-100 translate-y-0"
+              }`}
+              style={{ animationDelay: "0.1s" }}
+            >
+              {currentText}
+            </h1>
+          </div>
 
-          <p
-            className="subhead mx-auto mb-6 max-w-2xl animate-fade-in-up"
-            style={{ animationDelay: "0.2s" }}
-          >
-            Jsem tady, abych ukázal, co umí.
-          </p>
+          {/* A/B test indicator (jen v developmentu) */}
+          {process.env.NODE_ENV === "development" && (
+            <div className="absolute top-2 right-2 text-[10px] px-2 py-1 rounded bg-white/10 text-white/50">
+              Variant {variant}
+            </div>
+          )}
 
-          <p
-            className="mb-10 text-sm animate-fade-in-up"
-            style={{ color: "var(--text-muted)", animationDelay: "0.3s" }}
-          >
-            Programování od dětství. AI od prvního GPT. Pořád stejnej kluk, co chtěl z myšlenky udělat něco.
-          </p>
-
+          {/* CTA tlačítka */}
           <div
             className="flex flex-col items-center justify-center gap-3 sm:flex-row animate-fade-in-up"
             style={{ animationDelay: "0.4s" }}
