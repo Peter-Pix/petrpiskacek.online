@@ -490,3 +490,8 @@ html, body {
     transition-duration: 0.01ms !important;
   }
 }
+
+@keyframes siteSwitcherFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
