@@ -82,8 +82,8 @@ export default function Hero() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Rotace textu — jemný fade out (zůstává slabě vidět) → swap → fade in
-  // Žádný „zmizí a čeká“ — text je vždy aspoň slabě vidět.
+  // Rotace textu — pomalý, plynulý fade. Apple styl.
+  // 1.5s fade out → swap → 1.5s fade in. Text nikdy nezmizí úplně.
   useEffect(() => {
     if (reducedMotion) return;
 
@@ -101,8 +101,8 @@ export default function Hero() {
         requestAnimationFrame(() => {
           setIsFading(false);
         });
-      }, 200);
-    }, 4000);
+      }, 1500);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [variant, reducedMotion]);
@@ -139,7 +139,7 @@ export default function Hero() {
               className={`headline-xl absolute inset-0 flex items-center justify-center ${
                 reducedMotion
                   ? ""
-                  : `transition-opacity duration-[200ms] ease-out ${
+                  : `transition-opacity duration-[1500ms] ease-in-out ${
                       isFading ? "opacity-[0.15]" : "opacity-100"
                     }`
               }`}
