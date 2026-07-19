@@ -11,19 +11,19 @@ const LINES = [
 ];
 
 // Rychlost psaní (ms na znak) — pomalejší, ať si to člověk vychutná
-const TYPE_SPEED = 50;
+const TYPE_SPEED = 80;
 // Pauza po dopsání řádku (ms)
-const PAUSE_AFTER_LINE = 1800;
+const PAUSE_AFTER_LINE = 2500;
 // Blikání na konci — počet bliknutí
 const BLINK_COUNT = 4;
 // Délka jednoho bliknutí (ms)
-const BLINK_DURATION = 120;
+const BLINK_DURATION = 150;
 // Pauza mezi bliknutími (ms)
-const BLINK_GAP = 100;
+const BLINK_GAP = 150;
 // Délka blur fade-out efektu (ms)
-const BLUR_FADE_DURATION = 600;
+const BLUR_FADE_DURATION = 1000;
 // Pauza před začátkem psaní dalšího řádku (ms)
-const PAUSE_BEFORE_NEXT = 500;
+const PAUSE_BEFORE_NEXT = 800;
 
 export default function Hero() {
   const textRef = useRef<HTMLDivElement>(null);
