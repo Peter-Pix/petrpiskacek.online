@@ -134,11 +134,15 @@ export default function Hero() {
             <EchoTrigger sectionId="hero" />
           </div>
 
-          {/* Headline s rotujícím textem — jeden h1, žádný překryv */}
+          {/* Headline s rotujícím textem — čistý fade in / fade out */}
           <div className="relative min-h-[5rem] mb-8 flex items-center justify-center sm:min-h-[3.5rem]">
             <h1
               className={`headline-xl absolute inset-0 flex items-center justify-center ${
-                reducedMotion ? "" : `transition-all duration-[400ms] ease-in-out ${isFading ? "opacity-0 -translate-y-2 blur-sm" : "opacity-100 translate-y-0 blur-0"}`
+                reducedMotion
+                  ? ""
+                  : `transition-opacity duration-[400ms] ease-in-out ${
+                      isFading ? "opacity-0" : "opacity-100"
+                    }`
               }`}
             >
               {displayText}
