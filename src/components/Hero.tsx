@@ -1,46 +1,53 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EchoTrigger } from "./ChatBot";
 
-// Každej řádek je samostatná "myšlenka" — napíše se, chvíli počká, zmizí, pak další.
+// Každej řádek je samostatná "myšlenka" — napíše se, chvíli počká, blikne, zmizí.
 const LINES = [
   "Nejsem tady, abych prodal AI.",
   "Jsem tady, abych ukázal, co umí.",
   "A proč si myslím, že to má smysl.",
 ];
 
-// Rychlost psaní (ms na znak)
-const TYPE_SPEED = 35;
+// Rychlost psaní (ms na znak) — pomalejší, ať si to člověk vychutná
+const TYPE_SPEED = 50;
 // Pauza po dopsání řádku (ms)
-const PAUSE_AFTER_LINE = 2000;
+const PAUSE_AFTER_LINE = 1800;
+// Blikání na konci — počet bliknutí
+const BLINK_COUNT = 4;
+// Délka jednoho bliknutí (ms)
+const BLINK_DURATION = 120;
+// Pauza mezi bliknutími (ms)
+const BLINK_GAP = 100;
+// Délka blur fade-out efektu (ms)
+const BLUR_FADE_DURATION = 600;
 // Pauza před začátkem psaní dalšího řádku (ms)
-const PAUSE_BEFORE_NEXT = 400;
-// Rychlost mazání (ms na znak)
-const DELETE_SPEED = 20;
+const PAUSE_BEFORE_NEXT = 500;
 
 export default function Hero() {
   const textRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [displayedLines, setDisplayedLines] = useState<string[]>([""]);
   const [currentLine, setCurrentLine] = useState(0);
   const [isTyping, setIsTyping] = useState(true);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isBlinking, setIsBlinking] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
   const [cursorVisible, setCursorVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
 
-  // Blikání kurzoru
+  // Blikání kurzoru (jen když se píše)
   useEffect(() => {
-    if (reducedMotion) return;
+    if (reducedMotion || !isTyping || isBlinking || isFadingOut) return;
     const interval = setInterval(() => {
       setCursorVisible((v) => !v);
     }, 530);
     return () => clearInterval(interval);
-  }, [reducedMotion]);
+  }, [reducedMotion, isTyping, isBlinking, isFadingOut]);
 
-  // Hlavní smyčka psaní/mazání
+  // Hlavní smyčka psaní → blikání → blur fade → další řádek
   useEffect(() => {
     if (reducedMotion) {
-      // Při reduced motion rovnou ukážeme všechny řádky
       setDisplayedLines(LINES);
       return;
     }
@@ -48,7 +55,8 @@ export default function Hero() {
     const line = LINES[currentLine];
     if (!line) return;
 
-    if (isTyping && !isDeleting) {
+    // --- FÁZE 1: PSANÍ ---
+    if (isTyping && !isBlinking && !isFadingOut) {
       const currentText = displayedLines[currentLine] || "";
       if (currentText.length < line.length) {
         const timeout = setTimeout(() => {
@@ -60,43 +68,65 @@ export default function Hero() {
         }, TYPE_SPEED);
         return () => clearTimeout(timeout);
       } else {
-        // Dopsáno — pauza, pak začni mazat
+        // Dopsáno — pauza, pak začni blikat
         const timeout = setTimeout(() => {
-          setIsDeleting(true);
+          setIsTyping(false);
+          setIsBlinking(true);
         }, PAUSE_AFTER_LINE);
         return () => clearTimeout(timeout);
       }
     }
 
-    if (isDeleting) {
-      const currentText = displayedLines[currentLine] || "";
-      if (currentText.length > 0) {
-        const timeout = setTimeout(() => {
-          setDisplayedLines((prev) => {
-            const next = [...prev];
-            next[currentLine] = currentText.slice(0, -1);
-            return next;
-          });
-        }, DELETE_SPEED);
-        return () => clearTimeout(timeout);
-      } else {
-        // Smazáno — přesun na další řádek
-        setIsDeleting(false);
+    // --- FÁZE 2: BLIKÁNÍ (zářivka) ---
+    if (isBlinking) {
+      let blinkCount = 0;
+      const blink = () => {
+        if (blinkCount >= BLINK_COUNT) {
+          // Blikání hotovo — začni blur fade
+          setIsBlinking(false);
+          setIsFadingOut(true);
+          return;
+        }
+        // Blik — zmizí
+        setCursorVisible(false);
+        setTimeout(() => {
+          // Blik — objeví se
+          setCursorVisible(true);
+          blinkCount++;
+          setTimeout(blink, BLINK_GAP);
+        }, BLINK_DURATION);
+      };
+      const timeout = setTimeout(blink, 200);
+      return () => clearTimeout(timeout);
+    }
+
+    // --- FÁZE 3: BLUR FADE OUT ---
+    if (isFadingOut) {
+      const timeout = setTimeout(() => {
+        // Smažeme text
+        setDisplayedLines((prev) => {
+          const next = [...prev];
+          next[currentLine] = "";
+          return next;
+        });
+        setIsFadingOut(false);
         setIsTyping(true);
+        setCursorVisible(true);
+
+        // Přesun na další řádek
         const nextLine = (currentLine + 1) % LINES.length;
-        const timeout = setTimeout(() => {
+        setTimeout(() => {
           setCurrentLine(nextLine);
-          // Pokud je další řádek prázdnej, inicializuj ho
           setDisplayedLines((prev) => {
             const next = [...prev];
             if (!next[nextLine]) next[nextLine] = "";
             return next;
           });
         }, PAUSE_BEFORE_NEXT);
-        return () => clearTimeout(timeout);
-      }
+      }, BLUR_FADE_DURATION);
+      return () => clearTimeout(timeout);
     }
-  }, [currentLine, displayedLines, isTyping, isDeleting, reducedMotion]);
+  }, [currentLine, displayedLines, isTyping, isBlinking, isFadingOut, reducedMotion]);
 
   // Parallax scroll efekt
   useEffect(() => {
@@ -148,14 +178,25 @@ export default function Hero() {
             <EchoTrigger sectionId="hero" />
           </div>
 
-          {/* Typewriter hero text */}
-          <div className="relative mb-12 flex min-h-[4.5rem] items-center justify-center sm:min-h-[3.5rem] sm:mb-16">
-            <h1 className="headline-xl inline-flex items-baseline gap-0">
+          {/* Typewriter hero text — fixní výška, žádný odskakování */}
+          <div
+            ref={containerRef}
+            className="relative mb-12 flex items-center justify-center sm:mb-16"
+            style={{ minHeight: "6rem" }}
+          >
+            <h1
+              className="headline-xl text-center"
+              style={{
+                filter: isFadingOut ? `blur(8px)` : `blur(0px)`,
+                opacity: isFadingOut ? 0 : 1,
+                transition: `filter ${BLUR_FADE_DURATION}ms ease-out, opacity ${BLUR_FADE_DURATION}ms ease-out`,
+              }}
+            >
               {displayedLines.map((line, i) => (
                 <span key={i} className="block">
                   {line}
                   {/* Kurzor jen na aktuálně psaným řádku */}
-                  {i === currentLine && (
+                  {i === currentLine && isTyping && (
                     <span
                       className={`inline-block w-[3px] h-[0.8em] ml-1 align-middle transition-opacity duration-100 ${
                         cursorVisible ? "opacity-100" : "opacity-0"
