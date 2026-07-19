@@ -8,10 +8,10 @@ export default function Story() {
     <section data-context-section="story" id="pribeh" className="section-apple">
       <div className="container-read">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <p className="eyebrow">Příběh</p>
+          <p className="eyebrow">Příběh — člověk za tím vším</p>
           <EchoTrigger sectionId="story" />
         </div>
-        <h2 className="headline-lg mb-8">Jak jsem se sem dostal</h2>
+        <h2 className="headline-lg mb-8">Lidi se ptají proč to dělám.</h2>
 
         <div className="longform">
           <p>
