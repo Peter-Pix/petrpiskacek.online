@@ -6,7 +6,7 @@ import { EchoTrigger } from "./ChatBot";
 const LINES = [
   "Neprodávám AI.",
   "Ukazuju, co umí.",
-  "A proč to dává smysl.",
+  "Dává to smysl.",
 ];
 
 const TYPE_SPEED = 80;
