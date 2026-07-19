@@ -1,108 +1,88 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EchoTrigger } from "./ChatBot";
 
-// Každej řádek je samostatná "myšlenka" — napíše se, chvíli počká, blikne, zmizí.
 const LINES = [
   "Neprodávám AI.",
   "Ukazuju, co umí.",
   "A proč to dává smysl.",
 ];
 
-// Rychlost psaní (ms na znak)
 const TYPE_SPEED = 80;
-// Pauza po dopsání (ms)
 const PAUSE_AFTER_LINE = 2500;
-// Blikání na konci — počet bliknutí
 const BLINK_COUNT = 4;
-// Délka jednoho bliknutí (ms)
 const BLINK_DURATION = 150;
-// Pauza mezi bliknutími (ms)
 const BLINK_GAP = 150;
-// Délka blur fade-out efektu (ms)
 const BLUR_FADE_DURATION = 1000;
-// Pauza před začátkem psaní dalšího řádku (ms)
 const PAUSE_BEFORE_NEXT = 800;
 
 export default function Hero() {
   const textRef = useRef<HTMLDivElement>(null);
   const [text, setText] = useState("");
-  const [currentLine, setCurrentLine] = useState(0);
   const [cursorVisible, setCursorVisible] = useState(true);
+  const [fading, setFading] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
-  // Stav: "idle" = ready na další akci, "busy" = probíhá animace
-  const [ready, setReady] = useState(true);
-  // Fade stav: null = normální, "fading" = probíhá blur fade
-  const [fading, setFading] = useState(false);
+  // Refy — žádný state, žádný re-rendery
+  const currentLineRef = useRef(0);
+  const cancelledRef = useRef(false);
+  const runningRef = useRef(false);
 
-  // --- Blikání kurzoru (jen když je text a není fade) ---
-  useEffect(() => {
-    if (reducedMotion || fading || !text) return;
-    const interval = setInterval(() => {
-      setCursorVisible((v) => !v);
-    }, 530);
-    return () => clearInterval(interval);
-  }, [reducedMotion, fading, text]);
+  // Spuštění animace pro aktuální řádek
+  const startTyping = useRef<() => void>(() => {});
 
-  // --- Callback: animace dokončena → ready na další ---
-  const onAnimationDone = useCallback(() => {
-    setReady(true);
-  }, []);
+  startTyping.current = () => {
+    if (runningRef.current) return;
+    runningRef.current = true;
+    cancelledRef.current = false;
 
-  // --- Hlavní smyčka: ready + není fade → začni psát ---
-  useEffect(() => {
-    if (reducedMotion) {
-      setText(LINES.join("\n"));
+    const line = LINES[currentLineRef.current];
+    if (!line) {
+      runningRef.current = false;
       return;
     }
-    if (!ready || fading) return;
 
-    const line = LINES[currentLine];
-    if (!line) return;
-
-    let cancelled = false;
-    setReady(false);
+    let pos = 0;
 
     // Fáze 1: Psaní
-    let pos = 0;
     const typeChar = () => {
-      if (cancelled) return;
+      if (cancelledRef.current) return;
       if (pos < line.length) {
         pos++;
         setText(line.slice(0, pos));
         setTimeout(typeChar, TYPE_SPEED);
       } else {
-        // Fáze 2: Pauza po dopsání
+        // Fáze 2: Pauza
         setTimeout(() => {
-          if (cancelled) return;
-          // Fáze 3: Blikání (zářivka)
+          if (cancelledRef.current) return;
+          // Fáze 3: Blikání
           let blinkCount = 0;
           const doBlink = () => {
-            if (cancelled) return;
+            if (cancelledRef.current) return;
             if (blinkCount >= BLINK_COUNT) {
-              // Fáze 4: Blur fade out
+              // Fáze 4: Blur fade
               setCursorVisible(false);
               setFading(true);
               setTimeout(() => {
-                if (cancelled) return;
+                if (cancelledRef.current) return;
                 setText("");
                 setFading(false);
-                // Fáze 5: Pauza před dalším řádkem
+                // Fáze 5: Pauza před dalším
                 setTimeout(() => {
-                  if (cancelled) return;
-                  const nextLine = (currentLine + 1) % LINES.length;
-                  setCurrentLine(nextLine);
+                  if (cancelledRef.current) return;
+                  currentLineRef.current = (currentLineRef.current + 1) % LINES.length;
                   setCursorVisible(true);
-                  onAnimationDone();
+                  runningRef.current = false;
+                  // Spustit další cyklus
+                  setTimeout(() => startTyping.current(), 50);
                 }, PAUSE_BEFORE_NEXT);
               }, BLUR_FADE_DURATION);
               return;
             }
             setCursorVisible(false);
             setTimeout(() => {
-              if (cancelled) return;
+              if (cancelledRef.current) return;
               setCursorVisible(true);
               blinkCount++;
               setTimeout(doBlink, BLINK_GAP);
@@ -114,25 +94,43 @@ export default function Hero() {
     };
 
     setTimeout(typeChar, 100);
+  };
 
-    return () => { cancelled = true; };
-  }, [ready, currentLine, fading, reducedMotion, onAnimationDone]);
+  // Start na mount
+  useEffect(() => {
+    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    if (reducedMotion) {
+      setText(LINES.join("\n"));
+      return;
+    }
+    const timer = setTimeout(() => startTyping.current(), 500);
+    return () => {
+      cancelledRef.current = true;
+      clearTimeout(timer);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Parallax scroll efekt
+  // Kurzor blikání
+  useEffect(() => {
+    if (reducedMotion || fading || !text) return;
+    const interval = setInterval(() => {
+      setCursorVisible((v) => !v);
+    }, 530);
+    return () => clearInterval(interval);
+  }, [reducedMotion, fading, text]);
+
+  // Parallax scroll
   useEffect(() => {
     const el = textRef.current;
     if (!el) return;
-
     function handleScroll() {
       if (!el) return;
       const scrollY = window.scrollY;
       const progress = Math.min(scrollY / window.innerHeight, 1);
-
       el.style.transform = `translateY(${-Math.min(scrollY * 0.15, 50)}px)`;
       el.style.opacity = String(Math.max(1 - progress * 1.4, 0));
       el.style.filter = `blur(${Math.min(progress * 12, 8)}px)`;
     }
-
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -152,10 +150,7 @@ export default function Hero() {
             transition: "transform 0.1s linear, opacity 0.1s linear, filter 0.1s linear",
           }}
         >
-          <p
-            className="eyebrow mb-4 animate-fade-in-up"
-            style={{ color: "var(--gold)" }}
-          >
+          <p className="eyebrow mb-4 animate-fade-in-up" style={{ color: "var(--gold)" }}>
             Petr Piskáček
           </p>
 
@@ -163,7 +158,6 @@ export default function Hero() {
             <EchoTrigger sectionId="hero" />
           </div>
 
-          {/* Typewriter — jeden řádek, žádný hromadění */}
           <div
             className="relative mb-12 flex items-center justify-center sm:mb-16"
             style={{ minHeight: "6rem" }}
@@ -188,21 +182,14 @@ export default function Hero() {
             </h1>
           </div>
 
-          {/* CTA tlačítka */}
           <div
             className="flex animate-fade-in-up flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6"
             style={{ animationDelay: "0.4s" }}
           >
-            <a
-              href="#pribeh"
-              className="btn-apple btn-apple-primary w-full sm:w-auto"
-            >
+            <a href="#pribeh" className="btn-apple btn-apple-primary w-full sm:w-auto">
               Zajímá tě proč?
             </a>
-            <a
-              href="#projekty"
-              className="btn-apple btn-apple-secondary w-full sm:w-auto"
-            >
+            <a href="#projekty" className="btn-apple btn-apple-secondary w-full sm:w-auto">
               Prozkoumat projekty
             </a>
           </div>
