@@ -134,7 +134,7 @@ export default function Hero() {
           </div>
 
           {/* Headline s rotujícím textem — jemný fade, text nikdy úplně nezmizí */}
-          <div className="relative min-h-[5rem] mb-8 flex items-center justify-center sm:min-h-[3.5rem]">
+          <div className="relative min-h-[5rem] mb-12 flex items-center justify-center sm:min-h-[3.5rem] sm:mb-16">
             <h1
               className={`headline-xl absolute inset-0 flex items-center justify-center ${
                 reducedMotion
@@ -155,9 +155,9 @@ export default function Hero() {
             </div>
           )}
 
-          {/* CTA tlačítka */}
+          {/* CTA tlačítka — větší odstup od headline */}
           <div
-            className="flex animate-fade-in-up flex-col items-center justify-center gap-3 sm:flex-row"
+            className="flex animate-fade-in-up flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6"
             style={{ animationDelay: "0.4s" }}
           >
             <a
