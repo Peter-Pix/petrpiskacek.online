@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { EchoTrigger } from "./ChatBot";
 
 // Každej řádek je samostatná "myšlenka" — napíše se, chvíli počká, blikne, zmizí.
@@ -25,91 +25,98 @@ const BLUR_FADE_DURATION = 1000;
 // Pauza před začátkem psaní dalšího řádku (ms)
 const PAUSE_BEFORE_NEXT = 800;
 
-type Phase = "typing" | "pause" | "blinking" | "fading" | "waiting";
-
 export default function Hero() {
   const textRef = useRef<HTMLDivElement>(null);
   const [text, setText] = useState("");
   const [currentLine, setCurrentLine] = useState(0);
-  const [phase, setPhase] = useState<Phase>("typing");
   const [cursorVisible, setCursorVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
 
-  // Blikání kurzoru (jen během psaní)
+  // Stav: "idle" = ready na další akci, "busy" = probíhá animace
+  const [ready, setReady] = useState(true);
+  // Fade stav: null = normální, "fading" = probíhá blur fade
+  const [fading, setFading] = useState(false);
+
+  // --- Blikání kurzoru (jen když je text a není fade) ---
   useEffect(() => {
-    if (reducedMotion || phase !== "typing") return;
+    if (reducedMotion || fading || !text) return;
     const interval = setInterval(() => {
       setCursorVisible((v) => !v);
     }, 530);
     return () => clearInterval(interval);
-  }, [reducedMotion, phase]);
+  }, [reducedMotion, fading, text]);
 
-  // Hlavní smyčka
+  // --- Callback: animace dokončena → ready na další ---
+  const onAnimationDone = useCallback(() => {
+    setReady(true);
+  }, []);
+
+  // --- Hlavní smyčka: ready + není fade → začni psát ---
   useEffect(() => {
     if (reducedMotion) {
       setText(LINES.join("\n"));
       return;
     }
+    if (!ready || fading) return;
 
     const line = LINES[currentLine];
     if (!line) return;
 
-    // --- FÁZE 1: PSANÍ ---
-    if (phase === "typing") {
-      if (text.length < line.length) {
-        const timeout = setTimeout(() => {
-          setText(line.slice(0, text.length + 1));
-        }, TYPE_SPEED);
-        return () => clearTimeout(timeout);
+    let cancelled = false;
+    setReady(false);
+
+    // Fáze 1: Psaní
+    let pos = 0;
+    const typeChar = () => {
+      if (cancelled) return;
+      if (pos < line.length) {
+        pos++;
+        setText(line.slice(0, pos));
+        setTimeout(typeChar, TYPE_SPEED);
       } else {
-        // Dopsáno — pauza
-        const timeout = setTimeout(() => {
-          setPhase("blinking");
-        }, PAUSE_AFTER_LINE);
-        return () => clearTimeout(timeout);
-      }
-    }
-
-    // --- FÁZE 2: BLIKÁNÍ (zářivka) ---
-    if (phase === "blinking") {
-      let blinkCount = 0;
-      const blink = () => {
-        if (blinkCount >= BLINK_COUNT) {
-          setPhase("fading");
-          return;
-        }
-        setCursorVisible(false);
+        // Fáze 2: Pauza po dopsání
         setTimeout(() => {
-          setCursorVisible(true);
-          blinkCount++;
-          setTimeout(blink, BLINK_GAP);
-        }, BLINK_DURATION);
-      };
-      const timeout = setTimeout(blink, 200);
-      return () => clearTimeout(timeout);
-    }
+          if (cancelled) return;
+          // Fáze 3: Blikání (zářivka)
+          let blinkCount = 0;
+          const doBlink = () => {
+            if (cancelled) return;
+            if (blinkCount >= BLINK_COUNT) {
+              // Fáze 4: Blur fade out
+              setCursorVisible(false);
+              setFading(true);
+              setTimeout(() => {
+                if (cancelled) return;
+                setText("");
+                setFading(false);
+                // Fáze 5: Pauza před dalším řádkem
+                setTimeout(() => {
+                  if (cancelled) return;
+                  const nextLine = (currentLine + 1) % LINES.length;
+                  setCurrentLine(nextLine);
+                  setCursorVisible(true);
+                  onAnimationDone();
+                }, PAUSE_BEFORE_NEXT);
+              }, BLUR_FADE_DURATION);
+              return;
+            }
+            setCursorVisible(false);
+            setTimeout(() => {
+              if (cancelled) return;
+              setCursorVisible(true);
+              blinkCount++;
+              setTimeout(doBlink, BLINK_GAP);
+            }, BLINK_DURATION);
+          };
+          setTimeout(doBlink, 200);
+        }, PAUSE_AFTER_LINE);
+      }
+    };
 
-    // --- FÁZE 3: BLUR FADE OUT ---
-    if (phase === "fading") {
-      const timeout = setTimeout(() => {
-        setText("");
-        setCursorVisible(false);
-        setPhase("waiting");
-      }, BLUR_FADE_DURATION);
-      return () => clearTimeout(timeout);
-    }
+    setTimeout(typeChar, 100);
 
-    // --- FÁZE 4: ČEKÁNÍ před dalším řádkem ---
-    if (phase === "waiting") {
-      const timeout = setTimeout(() => {
-        const nextLine = (currentLine + 1) % LINES.length;
-        setCurrentLine(nextLine);
-        setCursorVisible(true);
-        setPhase("typing");
-      }, PAUSE_BEFORE_NEXT);
-      return () => clearTimeout(timeout);
-    }
-  }, [currentLine, text, phase, reducedMotion]);
+    return () => { cancelled = true; };
+  }, [ready, currentLine, fading, reducedMotion, onAnimationDone]);
 
   // Parallax scroll efekt
   useEffect(() => {
@@ -119,8 +126,7 @@ export default function Hero() {
     function handleScroll() {
       if (!el) return;
       const scrollY = window.scrollY;
-      const viewportH = window.innerHeight;
-      const progress = Math.min(scrollY / viewportH, 1);
+      const progress = Math.min(scrollY / window.innerHeight, 1);
 
       el.style.transform = `translateY(${-Math.min(scrollY * 0.15, 50)}px)`;
       el.style.opacity = String(Math.max(1 - progress * 1.4, 0));
@@ -165,13 +171,13 @@ export default function Hero() {
             <h1
               className="headline-xl text-center"
               style={{
-                filter: phase === "fading" ? "blur(8px)" : "blur(0px)",
-                opacity: phase === "fading" ? 0 : 1,
+                filter: fading ? "blur(8px)" : "blur(0px)",
+                opacity: fading ? 0 : 1,
                 transition: `filter ${BLUR_FADE_DURATION}ms ease-out, opacity ${BLUR_FADE_DURATION}ms ease-out`,
               }}
             >
               {text}
-              {phase === "typing" && (
+              {text && !fading && (
                 <span
                   className={`inline-block w-[3px] h-[0.8em] ml-1 align-middle transition-opacity duration-100 ${
                     cursorVisible ? "opacity-100" : "opacity-0"
