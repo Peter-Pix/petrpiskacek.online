@@ -9,6 +9,7 @@ const links = [
   { href: "#pribeh", label: "Příběh" },
   { href: "#presvedceni", label: "Přesvědčení" },
   { href: "#projekty", label: "Projekty" },
+  { href: "/blog", label: "Blog" },
 ];
 
 export default function Nav() {
