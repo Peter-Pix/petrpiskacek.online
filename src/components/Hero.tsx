@@ -47,12 +47,15 @@ export default function Hero() {
   const textRef = useRef<HTMLDivElement>(null);
   const [variant, setVariant] = useState<"A" | "B">("A");
   const [rotatingIndex, setRotatingIndex] = useState(0);
-  const [prevIndex, setPrevIndex] = useState(0);
-  const [phase, setPhase] = useState<"visible" | "fading" | "changing">("visible");
+  const [displayText, setDisplayText] = useState("");
+  const [isFading, setIsFading] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
-    setVariant(getABVariant());
+    const v = getABVariant();
+    setVariant(v);
+    const parts = v === "A" ? ROTATING_PARTS_A : ROTATING_PARTS_B;
+    setDisplayText(parts[0]);
     setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }, []);
 
@@ -79,7 +82,8 @@ export default function Hero() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Rotace textu — plynulý crossfade (Apple styl)
+  // Rotace textu — jednoduchý fade out → změna textu → fade in
+  // Vždy je v DOM jen jeden h1, žádný překryv dvou textů.
   useEffect(() => {
     if (reducedMotion) return;
 
@@ -87,26 +91,22 @@ export default function Hero() {
     if (parts.length <= 1) return;
 
     const interval = setInterval(() => {
-      // Fáze 1: fade out (400ms)
-      setPhase("fading");
+      setIsFading(true);
       setTimeout(() => {
-        // Fáze 2: změna textu (okamžitě)
-        setPrevIndex(rotatingIndex);
-        setRotatingIndex((prev) => (prev + 1) % parts.length);
-        setPhase("changing");
-        // Fáze 3: fade in (400ms)
-        setTimeout(() => {
-          setPhase("visible");
-        }, 50);
+        setRotatingIndex((prev) => {
+          const next = (prev + 1) % parts.length;
+          setDisplayText(parts[next]);
+          return next;
+        });
+        // Po změně textu chvilku počkáme a pak fade in
+        requestAnimationFrame(() => {
+          setTimeout(() => setIsFading(false), 50);
+        });
       }, 400);
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [variant, rotatingIndex, reducedMotion]);
-
-  const parts = variant === "A" ? ROTATING_PARTS_A : ROTATING_PARTS_B;
-  const currentText = parts[rotatingIndex];
-  const prevText = parts[prevIndex];
+  }, [variant, reducedMotion]);
 
   return (
     <section
@@ -134,36 +134,15 @@ export default function Hero() {
             <EchoTrigger sectionId="hero" />
           </div>
 
-          {/* Headline s rotujícím textem — plynulý crossfade */}
+          {/* Headline s rotujícím textem — jeden h1, žádný překryv */}
           <div className="relative min-h-[5rem] mb-8 flex items-center justify-center sm:min-h-[3.5rem]">
-            {reducedMotion ? (
-              <h1 className="headline-xl">{currentText}</h1>
-            ) : (
-              <>
-                {/* Předchozí text — fade out */}
-                <h1
-                  className="headline-xl absolute inset-0 flex items-center justify-center transition-all duration-[400ms] ease-in-out"
-                  style={{
-                    opacity: phase === "fading" ? 0 : 1,
-                    transform: phase === "fading" ? "translateY(-8px)" : "translateY(0)",
-                    filter: phase === "fading" ? "blur(4px)" : "blur(0)",
-                  }}
-                >
-                  {prevText}
-                </h1>
-                {/* Nový text — fade in */}
-                <h1
-                  className="headline-xl absolute inset-0 flex items-center justify-center transition-all duration-[400ms] ease-in-out"
-                  style={{
-                    opacity: phase === "visible" ? 1 : 0,
-                    transform: phase === "visible" ? "translateY(0)" : "translateY(8px)",
-                    filter: phase === "visible" ? "blur(0)" : "blur(4px)",
-                  }}
-                >
-                  {currentText}
-                </h1>
-              </>
-            )}
+            <h1
+              className={`headline-xl absolute inset-0 flex items-center justify-center ${
+                reducedMotion ? "" : `transition-all duration-[400ms] ease-in-out ${isFading ? "opacity-0 -translate-y-2 blur-sm" : "opacity-100 translate-y-0 blur-0"}`
+              }`}
+            >
+              {displayText}
+            </h1>
           </div>
 
           {/* A/B test indicator (jen v developmentu) */}
