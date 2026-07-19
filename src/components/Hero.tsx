@@ -165,7 +165,7 @@ export default function Hero() {
               href="#pribeh"
               className="btn-apple btn-apple-primary w-full sm:w-auto"
             >
-              Přečíst příběh
+              Zajímá tě proč?
             </a>
             <a
               href="#projekty"
