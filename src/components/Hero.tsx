@@ -46,9 +46,10 @@ function getABVariant(): "A" | "B" {
 export default function Hero() {
   const textRef = useRef<HTMLDivElement>(null);
   const [variant, setVariant] = useState<"A" | "B">("A");
-  const [rotatingIndex, setRotatingIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [nextIndex, setNextIndex] = useState<number | null>(null);
   const [displayText, setDisplayText] = useState("");
-  const [isFading, setIsFading] = useState(false);
+  const [nextText, setNextText] = useState<string | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -82,8 +83,8 @@ export default function Hero() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Rotace textu — pomalý, plynulý fade. Apple styl.
-  // 1.5s fade out → swap → 1.5s fade in. Text nikdy nezmizí úplně.
+  // Rotace textu — plynulý crossfade dvou elementů.
+  // Jeden fade out, druhý fade in. Žádný skok, žádný „zešediví a zmizí“.
   useEffect(() => {
     if (reducedMotion) return;
 
@@ -91,21 +92,20 @@ export default function Hero() {
     if (parts.length <= 1) return;
 
     const interval = setInterval(() => {
-      setIsFading(true);
+      const next = (currentIndex + 1) % parts.length;
+      setNextText(parts[next]);
+      setNextIndex(next);
+      // Po 1.5s (fade out) se current přepne na next
       setTimeout(() => {
-        setRotatingIndex((prev) => {
-          const next = (prev + 1) % parts.length;
-          setDisplayText(parts[next]);
-          return next;
-        });
-        requestAnimationFrame(() => {
-          setIsFading(false);
-        });
+        setCurrentIndex(next);
+        setDisplayText(parts[next]);
+        setNextText(null);
+        setNextIndex(null);
       }, 1500);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [variant, reducedMotion]);
+  }, [variant, reducedMotion, currentIndex]);
 
   return (
     <section
@@ -133,19 +133,24 @@ export default function Hero() {
             <EchoTrigger sectionId="hero" />
           </div>
 
-          {/* Headline s rotujícím textem — jemný fade, text nikdy úplně nezmizí */}
+          {/* Headline s rotujícím textem — plynulý crossfade */}
           <div className="relative min-h-[5rem] mb-12 flex items-center justify-center sm:min-h-[3.5rem] sm:mb-16">
+            {/* Aktuální text — fade out, když je nextText */}
             <h1
-              className={`headline-xl absolute inset-0 flex items-center justify-center ${
-                reducedMotion
-                  ? ""
-                  : `transition-opacity duration-[1500ms] ease-in-out ${
-                      isFading ? "opacity-[0.15]" : "opacity-100"
-                    }`
+              className={`headline-xl absolute inset-0 flex items-center justify-center transition-opacity duration-[1500ms] ease-in-out ${
+                nextText ? "opacity-0" : "opacity-100"
               }`}
             >
               {displayText}
             </h1>
+            {/* Další text — fade in, když je aktivní */}
+            {nextText && (
+              <h1
+                className={`headline-xl absolute inset-0 flex items-center justify-center transition-opacity duration-[1500ms] ease-in-out opacity-100`}
+              >
+                {nextText}
+              </h1>
+            )}
           </div>
 
           {/* A/B test indicator (jen v developmentu) */}
