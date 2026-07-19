@@ -1,65 +1,104 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { EchoTrigger } from "./ChatBot";
 
-// A/B test varianty pro hero headline
-const VARIANTS = {
-  A: {
-    eyebrow: "Petr Piskáček",
-    line1: "Nejsem tady, abych prodal AI.",
-    line2: "Jsem tady, abych ukázal, co umí.",
-  },
-  B: {
-    eyebrow: "Petr Piskáček",
-    line1: "Žádná magie.",
-    line2: "Nový nástroj. Ukážu ti to.",
-  },
-};
-
-// Rotující části pro variantu A (Apple keynotes styl)
-const ROTATING_PARTS_A = [
+// Každej řádek je samostatná "myšlenka" — napíše se, chvíli počká, zmizí, pak další.
+const LINES = [
   "Nejsem tady, abych prodal AI.",
-  "Jsem tady, abych ukázal...",
-  "co umí.",
+  "Jsem tady, abych ukázal, co umí.",
+  "A proč si myslím, že to má smysl.",
 ];
 
-// Rotující části pro variantu B
-const ROTATING_PARTS_B = [
-  "Žádná magie.",
-  "Nový nástroj.",
-  "Ukážu ti to.",
-];
-
-function getABVariant(): "A" | "B" {
-  if (typeof window === "undefined") return "A";
-
-  const stored = localStorage.getItem("ab_hero_variant");
-  if (stored === "A" || stored === "B") return stored;
-
-  // 50/50 split
-  const variant = Math.random() < 0.5 ? "A" : "B";
-  localStorage.setItem("ab_hero_variant", variant);
-  return variant;
-}
+// Rychlost psaní (ms na znak)
+const TYPE_SPEED = 35;
+// Pauza po dopsání řádku (ms)
+const PAUSE_AFTER_LINE = 2000;
+// Pauza před začátkem psaní dalšího řádku (ms)
+const PAUSE_BEFORE_NEXT = 400;
+// Rychlost mazání (ms na znak)
+const DELETE_SPEED = 20;
 
 export default function Hero() {
   const textRef = useRef<HTMLDivElement>(null);
-  const [variant, setVariant] = useState<"A" | "B">("A");
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [nextIndex, setNextIndex] = useState<number | null>(null);
-  const [displayText, setDisplayText] = useState("");
-  const [nextText, setNextText] = useState<string | null>(null);
+  const [displayedLines, setDisplayedLines] = useState<string[]>([""]);
+  const [currentLine, setCurrentLine] = useState(0);
+  const [isTyping, setIsTyping] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [cursorVisible, setCursorVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
 
+  // Blikání kurzoru
   useEffect(() => {
-    const v = getABVariant();
-    setVariant(v);
-    const parts = v === "A" ? ROTATING_PARTS_A : ROTATING_PARTS_B;
-    setDisplayText(parts[0]);
-    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
+    if (reducedMotion) return;
+    const interval = setInterval(() => {
+      setCursorVisible((v) => !v);
+    }, 530);
+    return () => clearInterval(interval);
+  }, [reducedMotion]);
 
+  // Hlavní smyčka psaní/mazání
+  useEffect(() => {
+    if (reducedMotion) {
+      // Při reduced motion rovnou ukážeme všechny řádky
+      setDisplayedLines(LINES);
+      return;
+    }
+
+    const line = LINES[currentLine];
+    if (!line) return;
+
+    if (isTyping && !isDeleting) {
+      const currentText = displayedLines[currentLine] || "";
+      if (currentText.length < line.length) {
+        const timeout = setTimeout(() => {
+          setDisplayedLines((prev) => {
+            const next = [...prev];
+            next[currentLine] = line.slice(0, currentText.length + 1);
+            return next;
+          });
+        }, TYPE_SPEED);
+        return () => clearTimeout(timeout);
+      } else {
+        // Dopsáno — pauza, pak začni mazat
+        const timeout = setTimeout(() => {
+          setIsDeleting(true);
+        }, PAUSE_AFTER_LINE);
+        return () => clearTimeout(timeout);
+      }
+    }
+
+    if (isDeleting) {
+      const currentText = displayedLines[currentLine] || "";
+      if (currentText.length > 0) {
+        const timeout = setTimeout(() => {
+          setDisplayedLines((prev) => {
+            const next = [...prev];
+            next[currentLine] = currentText.slice(0, -1);
+            return next;
+          });
+        }, DELETE_SPEED);
+        return () => clearTimeout(timeout);
+      } else {
+        // Smazáno — přesun na další řádek
+        setIsDeleting(false);
+        setIsTyping(true);
+        const nextLine = (currentLine + 1) % LINES.length;
+        const timeout = setTimeout(() => {
+          setCurrentLine(nextLine);
+          // Pokud je další řádek prázdnej, inicializuj ho
+          setDisplayedLines((prev) => {
+            const next = [...prev];
+            if (!next[nextLine]) next[nextLine] = "";
+            return next;
+          });
+        }, PAUSE_BEFORE_NEXT);
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [currentLine, displayedLines, isTyping, isDeleting, reducedMotion]);
+
+  // Parallax scroll efekt
   useEffect(() => {
     const text = textRef.current;
     if (!text) return;
@@ -83,30 +122,6 @@ export default function Hero() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Rotace textu — plynulý crossfade dvou elementů.
-  // Jeden fade out, druhý fade in. Žádný skok, žádný „zešediví a zmizí“.
-  useEffect(() => {
-    if (reducedMotion) return;
-
-    const parts = variant === "A" ? ROTATING_PARTS_A : ROTATING_PARTS_B;
-    if (parts.length <= 1) return;
-
-    const interval = setInterval(() => {
-      const next = (currentIndex + 1) % parts.length;
-      setNextText(parts[next]);
-      setNextIndex(next);
-      // Po 1.5s (fade out) se current přepne na next
-      setTimeout(() => {
-        setCurrentIndex(next);
-        setDisplayText(parts[next]);
-        setNextText(null);
-        setNextIndex(null);
-      }, 1500);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [variant, reducedMotion, currentIndex]);
-
   return (
     <section
       data-context-section="hero"
@@ -126,41 +141,34 @@ export default function Hero() {
             className="eyebrow mb-4 animate-fade-in-up"
             style={{ color: "var(--gold)" }}
           >
-            {VARIANTS[variant].eyebrow}
+            Petr Piskáček
           </p>
 
           <div className="mb-4 flex justify-center">
             <EchoTrigger sectionId="hero" />
           </div>
 
-          {/* Headline s rotujícím textem — plynulý crossfade */}
-          <div className="relative min-h-[5rem] mb-12 flex items-center justify-center sm:min-h-[3.5rem] sm:mb-16">
-            {/* Aktuální text — fade out, když je nextText */}
-            <h1
-              className={`headline-xl absolute inset-0 flex items-center justify-center transition-opacity duration-[1500ms] ease-in-out ${
-                nextText ? "opacity-0" : "opacity-100"
-              }`}
-            >
-              {displayText}
+          {/* Typewriter hero text */}
+          <div className="relative mb-12 flex min-h-[4.5rem] items-center justify-center sm:min-h-[3.5rem] sm:mb-16">
+            <h1 className="headline-xl inline-flex items-baseline gap-0">
+              {displayedLines.map((line, i) => (
+                <span key={i} className="block">
+                  {line}
+                  {/* Kurzor jen na aktuálně psaným řádku */}
+                  {i === currentLine && (
+                    <span
+                      className={`inline-block w-[3px] h-[0.8em] ml-1 align-middle transition-opacity duration-100 ${
+                        cursorVisible ? "opacity-100" : "opacity-0"
+                      }`}
+                      style={{ backgroundColor: "var(--gold)" }}
+                    />
+                  )}
+                </span>
+              ))}
             </h1>
-            {/* Další text — fade in, když je aktivní */}
-            {nextText && (
-              <h1
-                className={`headline-xl absolute inset-0 flex items-center justify-center transition-opacity duration-[1500ms] ease-in-out opacity-100`}
-              >
-                {nextText}
-              </h1>
-            )}
           </div>
 
-          {/* A/B test indicator (jen v developmentu) */}
-          {process.env.NODE_ENV === "development" && (
-            <div className="absolute top-2 right-2 rounded bg-white/10 px-2 py-1 text-[10px] text-white/50">
-              Variant {variant}
-            </div>
-          )}
-
-          {/* CTA tlačítka — větší odstup od headline */}
+          {/* CTA tlačítka */}
           <div
             className="flex animate-fade-in-up flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6"
             style={{ animationDelay: "0.4s" }}
