@@ -5,9 +5,9 @@ import { EchoTrigger } from "./ChatBot";
 
 // Každej řádek je samostatná "myšlenka" — napíše se, chvíli počká, blikne, zmizí.
 const LINES = [
-  "Nejsem tady, abych prodal AI.",
-  "Jsem tady, abych ukázal, co umí.",
-  "A proč si myslím, že to má smysl.",
+  "Neprodávám AI.",
+  "Ukazuju, co umí.",
+  "A proč to dává smysl.",
 ];
 
 // Rychlost psaní (ms na znak) — pomalejší, ať si to člověk vychutná
