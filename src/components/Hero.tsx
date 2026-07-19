@@ -82,8 +82,8 @@ export default function Hero() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Rotace textu — jednoduchý fade out → změna textu → fade in
-  // Vždy je v DOM jen jeden h1, žádný překryv dvou textů.
+  // Rotace textu — jemný fade out (zůstává slabě vidět) → swap → fade in
+  // Žádný „zmizí a čeká“ — text je vždy aspoň slabě vidět.
   useEffect(() => {
     if (reducedMotion) return;
 
@@ -98,11 +98,10 @@ export default function Hero() {
           setDisplayText(parts[next]);
           return next;
         });
-        // Po změně textu chvilku počkáme a pak fade in
         requestAnimationFrame(() => {
-          setTimeout(() => setIsFading(false), 50);
+          setIsFading(false);
         });
-      }, 400);
+      }, 200);
     }, 4000);
 
     return () => clearInterval(interval);
@@ -134,14 +133,14 @@ export default function Hero() {
             <EchoTrigger sectionId="hero" />
           </div>
 
-          {/* Headline s rotujícím textem — čistý fade in / fade out */}
+          {/* Headline s rotujícím textem — jemný fade, text nikdy úplně nezmizí */}
           <div className="relative min-h-[5rem] mb-8 flex items-center justify-center sm:min-h-[3.5rem]">
             <h1
               className={`headline-xl absolute inset-0 flex items-center justify-center ${
                 reducedMotion
                   ? ""
-                  : `transition-opacity duration-[400ms] ease-in-out ${
-                      isFading ? "opacity-0" : "opacity-100"
+                  : `transition-opacity duration-[200ms] ease-out ${
+                      isFading ? "opacity-[0.15]" : "opacity-100"
                     }`
               }`}
             >
