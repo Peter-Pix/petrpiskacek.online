@@ -31,18 +31,18 @@ export default function Story() {
           </p>
         </div>
 
-        {/* Pull quote */}
-        <div
-          className="my-12 rounded-2xl border p-6 md:p-8"
-          style={{
-            borderColor: "var(--badge-border)",
-            backgroundColor: "var(--badge-bg)",
-          }}
-        >
-          <QuoteIcon size={24} className="mb-3" />
-          <p className="text-lg font-medium leading-relaxed md:text-xl" style={{ color: "var(--text)" }}>
-            &bdquo;Z ničeho se mohl udělat něco. Člověk nepotřeboval cihly, nepotřeboval peníce. Potřeboval jenom myšlenku.&ldquo;
-          </p>
+        {/* Pull quote — Apple styl, bílý uvozovky, průhledný */}
+        <div className="my-12">
+          <div className="flex gap-4 md:gap-6">
+            <div className="flex-shrink-0" style={{ color: 'var(--text-secondary)' }}>
+              <QuoteIcon size={48} />
+            </div>
+            <div>
+              <p className="text-xl font-medium leading-relaxed md:text-2xl" style={{ color: 'var(--text)' }}>
+                &bdquo;Z ničeho se mohl udělat něco. Člověk nepotřeboval cihly, nepotřeboval peníze. Potřeboval jenom myšlenku.&ldquo;
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* CTA — propojení s cloudem */}
@@ -51,12 +51,7 @@ export default function Story() {
             href="https://petrpiskacek.cloud"
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all hover:scale-[1.02]"
-            style={{
-              backgroundColor: "var(--gold)",
-              color: "var(--text-inverse)",
-              boxShadow: "0 8px 24px rgba(200, 150, 46, 0.25)",
-            }}
+            className="btn-apple btn-apple-primary group inline-flex items-center gap-2"
           >
             Mrkni, co z těch myšlenek vzniklo
             <svg
@@ -65,21 +60,15 @@ export default function Story() {
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="transition-transform group-hover:translate-x-0.5"
+              className="transition-transform group-hover:translate-x-1"
             >
               <line x1="5" y1="12" x2="19" y2="12" />
               <polyline points="12 5 19 12 12 19" />
             </svg>
           </a>
-          <p
-            className="text-xs"
-            style={{ color: "var(--text-muted)" }}
-          >
-            petrpiskacek.cloud — živá AI infrastruktura
-          </p>
         </div>
       </div>
     </section>
