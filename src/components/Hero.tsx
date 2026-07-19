@@ -10,9 +10,9 @@ const LINES = [
   "A proč to dává smysl.",
 ];
 
-// Rychlost psaní (ms na znak) — pomalejší, ať si to člověk vychutná
+// Rychlost psaní (ms na znak)
 const TYPE_SPEED = 80;
-// Pauza po dopsání řádku (ms)
+// Pauza po dopsání (ms)
 const PAUSE_AFTER_LINE = 2500;
 // Blikání na konci — počet bliknutí
 const BLINK_COUNT = 4;
@@ -25,30 +25,29 @@ const BLUR_FADE_DURATION = 1000;
 // Pauza před začátkem psaní dalšího řádku (ms)
 const PAUSE_BEFORE_NEXT = 800;
 
+type Phase = "typing" | "pause" | "blinking" | "fading" | "waiting";
+
 export default function Hero() {
   const textRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [displayedLines, setDisplayedLines] = useState<string[]>([""]);
+  const [text, setText] = useState("");
   const [currentLine, setCurrentLine] = useState(0);
-  const [isTyping, setIsTyping] = useState(true);
-  const [isBlinking, setIsBlinking] = useState(false);
-  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [phase, setPhase] = useState<Phase>("typing");
   const [cursorVisible, setCursorVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
 
-  // Blikání kurzoru (jen když se píše)
+  // Blikání kurzoru (jen během psaní)
   useEffect(() => {
-    if (reducedMotion || !isTyping || isBlinking || isFadingOut) return;
+    if (reducedMotion || phase !== "typing") return;
     const interval = setInterval(() => {
       setCursorVisible((v) => !v);
     }, 530);
     return () => clearInterval(interval);
-  }, [reducedMotion, isTyping, isBlinking, isFadingOut]);
+  }, [reducedMotion, phase]);
 
-  // Hlavní smyčka psaní → blikání → blur fade → další řádek
+  // Hlavní smyčka
   useEffect(() => {
     if (reducedMotion) {
-      setDisplayedLines(LINES);
+      setText(LINES.join("\n"));
       return;
     }
 
@@ -56,41 +55,31 @@ export default function Hero() {
     if (!line) return;
 
     // --- FÁZE 1: PSANÍ ---
-    if (isTyping && !isBlinking && !isFadingOut) {
-      const currentText = displayedLines[currentLine] || "";
-      if (currentText.length < line.length) {
+    if (phase === "typing") {
+      if (text.length < line.length) {
         const timeout = setTimeout(() => {
-          setDisplayedLines((prev) => {
-            const next = [...prev];
-            next[currentLine] = line.slice(0, currentText.length + 1);
-            return next;
-          });
+          setText(line.slice(0, text.length + 1));
         }, TYPE_SPEED);
         return () => clearTimeout(timeout);
       } else {
-        // Dopsáno — pauza, pak začni blikat
+        // Dopsáno — pauza
         const timeout = setTimeout(() => {
-          setIsTyping(false);
-          setIsBlinking(true);
+          setPhase("blinking");
         }, PAUSE_AFTER_LINE);
         return () => clearTimeout(timeout);
       }
     }
 
     // --- FÁZE 2: BLIKÁNÍ (zářivka) ---
-    if (isBlinking) {
+    if (phase === "blinking") {
       let blinkCount = 0;
       const blink = () => {
         if (blinkCount >= BLINK_COUNT) {
-          // Blikání hotovo — začni blur fade
-          setIsBlinking(false);
-          setIsFadingOut(true);
+          setPhase("fading");
           return;
         }
-        // Blik — zmizí
         setCursorVisible(false);
         setTimeout(() => {
-          // Blik — objeví se
           setCursorVisible(true);
           blinkCount++;
           setTimeout(blink, BLINK_GAP);
@@ -101,51 +90,41 @@ export default function Hero() {
     }
 
     // --- FÁZE 3: BLUR FADE OUT ---
-    if (isFadingOut) {
+    if (phase === "fading") {
       const timeout = setTimeout(() => {
-        // Smažeme text
-        setDisplayedLines((prev) => {
-          const next = [...prev];
-          next[currentLine] = "";
-          return next;
-        });
-        setIsFadingOut(false);
-        setIsTyping(true);
-        setCursorVisible(true);
-
-        // Přesun na další řádek
-        const nextLine = (currentLine + 1) % LINES.length;
-        setTimeout(() => {
-          setCurrentLine(nextLine);
-          setDisplayedLines((prev) => {
-            const next = [...prev];
-            if (!next[nextLine]) next[nextLine] = "";
-            return next;
-          });
-        }, PAUSE_BEFORE_NEXT);
+        setText("");
+        setCursorVisible(false);
+        setPhase("waiting");
       }, BLUR_FADE_DURATION);
       return () => clearTimeout(timeout);
     }
-  }, [currentLine, displayedLines, isTyping, isBlinking, isFadingOut, reducedMotion]);
+
+    // --- FÁZE 4: ČEKÁNÍ před dalším řádkem ---
+    if (phase === "waiting") {
+      const timeout = setTimeout(() => {
+        const nextLine = (currentLine + 1) % LINES.length;
+        setCurrentLine(nextLine);
+        setCursorVisible(true);
+        setPhase("typing");
+      }, PAUSE_BEFORE_NEXT);
+      return () => clearTimeout(timeout);
+    }
+  }, [currentLine, text, phase, reducedMotion]);
 
   // Parallax scroll efekt
   useEffect(() => {
-    const text = textRef.current;
-    if (!text) return;
+    const el = textRef.current;
+    if (!el) return;
 
     function handleScroll() {
+      if (!el) return;
       const scrollY = window.scrollY;
       const viewportH = window.innerHeight;
       const progress = Math.min(scrollY / viewportH, 1);
 
-      if (text) {
-        const opacity = Math.max(1 - progress * 1.4, 0);
-        const blur = Math.min(progress * 12, 8);
-        const translate = Math.min(scrollY * 0.15, 50);
-        text.style.transform = `translateY(${-translate}px)`;
-        text.style.opacity = String(opacity);
-        text.style.filter = `blur(${blur}px)`;
-      }
+      el.style.transform = `translateY(${-Math.min(scrollY * 0.15, 50)}px)`;
+      el.style.opacity = String(Math.max(1 - progress * 1.4, 0));
+      el.style.filter = `blur(${Math.min(progress * 12, 8)}px)`;
     }
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -178,34 +157,28 @@ export default function Hero() {
             <EchoTrigger sectionId="hero" />
           </div>
 
-          {/* Typewriter hero text — fixní výška, žádný odskakování */}
+          {/* Typewriter — jeden řádek, žádný hromadění */}
           <div
-            ref={containerRef}
             className="relative mb-12 flex items-center justify-center sm:mb-16"
             style={{ minHeight: "6rem" }}
           >
             <h1
               className="headline-xl text-center"
               style={{
-                filter: isFadingOut ? `blur(8px)` : `blur(0px)`,
-                opacity: isFadingOut ? 0 : 1,
+                filter: phase === "fading" ? "blur(8px)" : "blur(0px)",
+                opacity: phase === "fading" ? 0 : 1,
                 transition: `filter ${BLUR_FADE_DURATION}ms ease-out, opacity ${BLUR_FADE_DURATION}ms ease-out`,
               }}
             >
-              {displayedLines.map((line, i) => (
-                <span key={i} className="block">
-                  {line}
-                  {/* Kurzor jen na aktuálně psaným řádku */}
-                  {i === currentLine && isTyping && (
-                    <span
-                      className={`inline-block w-[3px] h-[0.8em] ml-1 align-middle transition-opacity duration-100 ${
-                        cursorVisible ? "opacity-100" : "opacity-0"
-                      }`}
-                      style={{ backgroundColor: "var(--gold)" }}
-                    />
-                  )}
-                </span>
-              ))}
+              {text}
+              {phase === "typing" && (
+                <span
+                  className={`inline-block w-[3px] h-[0.8em] ml-1 align-middle transition-opacity duration-100 ${
+                    cursorVisible ? "opacity-100" : "opacity-0"
+                  }`}
+                  style={{ backgroundColor: "var(--gold)" }}
+                />
+              )}
             </h1>
           </div>
 
