@@ -41,6 +41,33 @@ function tryQuickReply(text: string): string | null {
   return null;
 }
 
+// Custom first replies — ručně psaný, s hlasem
+const FIRST_REPLIES: Record<string, string> = {
+  hero:
+    "Že nekecá. Neprodává AI. Ukazuje, co umí. A dává to smysl. Celej tenhle web je důkaz, ne slib.",
+  story:
+    "Že to není žádnej 'příběh úspěchu'. Je to příběh člověka, kterej potkal nástroj, kterej konečně chápe stejně jako on. A místo aby ho prodával, tak s ním staví.",
+  beliefs:
+    "Že si nemyslí, že AI zachrání svět. Ani že ho zničí. Je to nástroj. Jako kladivo. Můžeš s ním postavit dům, nebo někoho praštit. Rozdíl je v tom, kdo ho drží.",
+  projects:
+    "Že každej projekt začal frustrací, ne nápadem. Štvalo ho, že něco neexistuje, nebo že to existuje blbě. Tak to postavil. Nic víc, nic míň.",
+  footer:
+    "Že i patička má svůj příběh. Ale fakt bys chtěl kecat o patičce?",
+};
+
+const PROJECT_FIRST_REPLIES: Record<string, string> = {
+  vocalbrain:
+    "Brainstorming o projektu nahlas — AI to celé naplánuje. Mluvíš, systém to přepíše, strukturalizuje, udělá to-do listy. Druhej den pozná, že jde o ten samej projekt, a přidá nový informace.",
+  stylemorph:
+    "Řekneš mu styl, ono to v reálném čase předělá celej web a můžeš si ho stáhnout. Malý firmy platí tisíce za redesign. Tohle to umí za pár vteřin.",
+  autoblog:
+    "Zvolíš téma, AI dohledá co lidi aktuálně zajímá, vyhledá informace, napíše články, zkontroluje je, vylepší, nasdílí online. Celej web se buduje a rozvíjí sám.",
+  scrollo:
+    "Jednoduchý nástroje. Bez reklam. Všechno běží v prohlížeči — žádná databáze, žádný tracking, žádná reklama. Petr je staví, protože sám potřebuje věci, který dělaj přesně to co maj.",
+  "4rap":
+    "Databáze českýho rapu. Kdo s kým, kdo co, odkud. 1200+ interpretů, skoro 6000 vazeb. Petr říká, že je to k ničemu. A v tom je krása — nedělá to pro nikoho, dělá to, protože ho to baví.",
+};
+
 export default function ChatBot() {
   const { open, openEcho, closeEcho, context, contextBadge, setContextBadge } = useEcho();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -53,42 +80,26 @@ export default function ChatBot() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const raisedRef = useRef<HTMLElement | null>(null);
   const previousRaisedRef = useRef<HTMLElement | null>(null);
-  const hasAutoSentRef = useRef(false);
+  const autoSendTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Custom first replies — ručně psaný, s hlasem, ne generický
-  // Žádný "programoval od dětství" — to je rare insider fact, ne úvod
-  const FIRST_REPLIES: Record<string, string> = {
-    hero:
-      "Že nekecá. Neprodává AI. Ukazuje, co umí. A dává to smysl. Celej tenhle web je důkaz, ne slib.",
-    story:
-      "Že to není žádnej 'příběh úspěchu'. Je to příběh člověka, kterej potkal nástroj, kterej konečně chápe stejně jako on. A místo aby ho prodával, tak s ním staví.",
-    beliefs:
-      "Že si nemyslí, že AI zachrání svět. Ani že ho zničí. Je to nástroj. Jako kladivo. Můžeš s ním postavit dům, nebo někoho praštit. Rozdíl je v tom, kdo ho drží.",
-    projects:
-      "Že každej projekt začal frustrací, ne nápadem. Štvalo ho, že něco neexistuje, nebo že to existuje blbě. Tak to postavil. Nic víc, nic míň.",
-    footer:
-      "Že i patička má svůj příběh. Ale fakt bys chtěl kecat o patičce?",
-  };
-
-  const PROJECT_FIRST_REPLIES: Record<string, string> = {
-    vocalbrain:
-      "Brainstorming o projektu nahlas — AI to celé naplánuje. Mluvíš, systém to přepíše, strukturalizuje, udělá to-do listy. Druhej den pozná, že jde o ten samej projekt, a přidá nový informace.",
-    stylemorph:
-      "Řekneš mu styl, ono to v reálném čase předělá celej web a můžeš si ho stáhnout. Malý firmy platí tisíce za redesign. Tohle to umí za pár vteřin.",
-    autoblog:
-      "Zvolíš téma, AI dohledá co lidi aktuálně zajímá, vyhledá informace, napíše články, zkontroluje je, vylepší, nasdílí online. Celej web se buduje a rozvíjí sám.",
-    scrollo:
-      "Jednoduchý nástroje. Bez reklam. Všechno běží v prohlížeči — žádná databáze, žádný tracking, žádná reklama. Petr je staví, protože sám potřebuje věci, který dělaj přesně to co maj.",
-    "4rap":
-      "Databáze českýho rapu. Kdo s kým, kdo co, odkud. 1200+ interpretů, skoro 6000 vazeb. Petr říká, že je to k ničemu. A v tom je krása — nedělá to pro nikoho, dělá to, protože ho to baví.",
-  };
-
-  // Auto-send first message when Echo opens or context changes
+  // JEDINÝ effect, co řídí auto-send a cleanup.
+  // Žádný race condition — všechno na jednom místě.
   useEffect(() => {
-    if (!open || hasAutoSentRef.current) return;
-    if (messages.length > 0) return;
+    // Cleanup: když se zavře nebo změní kontext, zrušíme timer
+    if (autoSendTimerRef.current) {
+      clearTimeout(autoSendTimerRef.current);
+      autoSendTimerRef.current = null;
+    }
 
-    hasAutoSentRef.current = true;
+    if (!open) {
+      setMessages([]);
+      setLastAssistantId(null);
+      return;
+    }
+
+    // Otevřeno — vyčistíme starý stav a pošleme první zprávu
+    setMessages([]);
+    setLastAssistantId(null);
 
     let autoMsg = "";
     let firstReply = "";
@@ -105,12 +116,24 @@ export default function ChatBot() {
         "Jsem Echo. Hlas týhle stránky. Petr mě postavil, abych odpovídal na otázky, který bys normálně musel hledat sám. Nejsem chatbot na prodej. Jsem tu, protože ho baví stavět věci, který dávaj smysl.";
     }
 
-    const timer = setTimeout(() => {
-      sendUserMessage(autoMsg);
-      addAssistantMessage(firstReply);
+    autoSendTimerRef.current = setTimeout(() => {
+      setMessages((prev) => {
+        // Už má zprávy? Někdo mezitím něco poslal — nespouštíme auto-send
+        if (prev.length > 0) return prev;
+        return [
+          ...prev,
+          { role: "user" as const, content: autoMsg },
+          { role: "assistant" as const, content: firstReply },
+        ];
+      });
     }, 600);
 
-    return () => clearTimeout(timer);
+    return () => {
+      if (autoSendTimerRef.current) {
+        clearTimeout(autoSendTimerRef.current);
+        autoSendTimerRef.current = null;
+      }
+    };
   }, [open, context.project?.id, context.section?.id]);
 
   // Když user klikne mimo Echo (a ne na info-icon), zavri ho.
@@ -174,13 +197,6 @@ export default function ChatBot() {
     setRaised(Date.now());
   }, [open, context]);
 
-  // Reset auto-send flag when Echo closes
-  useEffect(() => {
-    if (!open) {
-      hasAutoSentRef.current = false;
-    }
-  }, [open]);
-
   // ESC zavře Echo
   useEffect(() => {
     if (!open) return;
@@ -197,15 +213,6 @@ export default function ChatBot() {
       setTimeout(() => inputRef.current?.focus(), 700);
     }
   }, [open]);
-
-  // Když se změní kontext, vyčistíme zprávy a resetujeme auto-send.
-  useEffect(() => {
-    if (open) {
-      setMessages([]);
-      setLastAssistantId(null);
-      hasAutoSentRef.current = false;
-    }
-  }, [context.project?.id, context.section?.id, open]);
 
   // Funkce pro poslání zprávy.
   const addAssistantMessage = useCallback((content: string) => {
