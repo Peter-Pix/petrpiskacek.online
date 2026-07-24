@@ -3,33 +3,27 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { InfoIcon, CloseIcon } from "./icons";
 import { useEcho } from "@/lib/echo-context";
-import {
-  PROJECTS,
-  SITE_SECTIONS,
-  type Project,
-  type Section,
-  type QuestionType,
-  staticAnswer,
-} from "@/lib/site-content";
+import { PROJECTS, SITE_SECTIONS, type QuestionType } from "@/lib/site-content";
 
 type Message = { role: "user" | "assistant"; content: string };
 
-// Quick replies for common inputs
+// ── Quick replies ──────────────────────────────────────────────
+
 const QUICK_REPLIES: Record<string, string> = {
-  "ahoj": "Ahoj. Co tě zajímá?",
-  "čau": "Ahoj. Co tě zajímá?",
-  "cus": "Ahoj. Co tě zajímá?",
-  "cau": "Ahoj. Co tě zajímá?",
-  "čus": "Ahoj. Co tě zajímá?",
-  "zdar": "Ahoj. Co tě zajímá?",
-  "zdravím": "Ahoj. Co tě zajímá?",
-  "čum": "Hm. Tak to asi nebudeme řešit. Co tě fakt zajímá?",
-  "kunda": "Hm. Tak to asi nebudeme řešit. Co tě fakt zajímá?",
-  "píča": "Hm. Tak to asi nebudeme řešit. Co tě fakt zajímá?",
-  "pica": "Hm. Tak to asi nebudeme řešit. Co tě fakt zajímá?",
-  "kokot": "Hm. Tak to asi nebudeme řešit. Co tě fakt zajímá?",
-  "prdel": "Hm. Tak to asi nebudeme řešit. Co tě fakt zajímá?",
-  "hovno": "Hm. Tak to asi nebudeme řešit. Co tě fakt zajímá?",
+  ahoj: "Ahoj. Co tě zajímá?",
+  čau: "Ahoj. Co tě zajímá?",
+  cus: "Ahoj. Co tě zajímá?",
+  cau: "Ahoj. Co tě zajímá?",
+  čus: "Ahoj. Co tě zajímá?",
+  zdar: "Ahoj. Co tě zajímá?",
+  zdravím: "Ahoj. Co tě zajímá?",
+  čum: "Hm. Tak to asi nebudeme řešit. Co tě fakt zajímá?",
+  kunda: "Hm. Tak to asi nebudeme řešit. Co tě fakt zajímá?",
+  píča: "Hm. Tak to asi nebudeme řešit. Co tě fakt zajímá?",
+  pica: "Hm. Tak to asi nebudeme řešit. Co tě fakt zajímá?",
+  kokot: "Hm. Tak to asi nebudeme řešit. Co tě fakt zajímá?",
+  prdel: "Hm. Tak to asi nebudeme řešit. Co tě fakt zajímá?",
+  hovno: "Hm. Tak to asi nebudeme řešit. Co tě fakt zajímá?",
 };
 
 function tryQuickReply(text: string): string | null {
@@ -41,7 +35,8 @@ function tryQuickReply(text: string): string | null {
   return null;
 }
 
-// Custom first replies — ručně psaný, s hlasem
+// ── First replies ──────────────────────────────────────────────
+
 const FIRST_REPLIES: Record<string, string> = {
   hero:
     "Že nekecá. Neprodává AI. Ukazuje, co umí. A dává to smysl. Celej tenhle web je důkaz, ne slib.",
@@ -68,24 +63,45 @@ const PROJECT_FIRST_REPLIES: Record<string, string> = {
     "Databáze českýho rapu. Kdo s kým, kdo co, odkud. 1200+ interpretů, skoro 6000 vazeb. Petr říká, že je to k ničemu. A v tom je krása — nedělá to pro nikoho, dělá to, protože ho to baví.",
 };
 
+// ── Helpers ────────────────────────────────────────────────────
+
+function buildFirstMessage(ctx: { project?: { id: string; fact: string }; section?: { id: string; wow?: string; summary: string } }) {
+  if (ctx.project) {
+    return {
+      user: "Co to je?",
+      assistant: PROJECT_FIRST_REPLIES[ctx.project.id] || ctx.project.fact,
+    };
+  }
+  if (ctx.section) {
+    return {
+      user: "Co je na tom nejzajímavější?",
+      assistant: FIRST_REPLIES[ctx.section.id] || ctx.section.wow || ctx.section.summary,
+    };
+  }
+  return {
+    user: "Ahoj, kdo jsi?",
+    assistant:
+      "Jsem Echo. Hlas týhle stránky. Petr mě postavil, abych odpovídal na otázky, který bys normálně musel hledat sám. Nejsem chatbot na prodej. Jsem tu, protože ho baví stavět věci, který dávaj smysl.",
+  };
+}
+
+// ── Component ──────────────────────────────────────────────────
+
 export default function ChatBot() {
-  const { open, openEcho, closeEcho, context, contextBadge, setContextBadge } = useEcho();
+  const { open, closeEcho, context, contextBadge, setContextBadge } = useEcho();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [lastAssistantId, setLastAssistantId] = useState<number | null>(null);
   const [continueTarget, setContinueTarget] = useState<number | null>(null);
-  const [raised, setRaised] = useState<number | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const raisedRef = useRef<HTMLElement | null>(null);
-  const previousRaisedRef = useRef<HTMLElement | null>(null);
   const autoSendTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const raisedRef = useRef<HTMLElement | null>(null);
 
-  // JEDINÝ effect, co řídí auto-send a cleanup.
-  // Žádný race condition — všechno na jednom místě.
+  // ── Auto-send + cleanup (single effect, no race) ──────────────
+
   useEffect(() => {
-    // Cleanup: když se zavře nebo změní kontext, zrušíme timer
     if (autoSendTimerRef.current) {
       clearTimeout(autoSendTimerRef.current);
       autoSendTimerRef.current = null;
@@ -97,31 +113,15 @@ export default function ChatBot() {
       return;
     }
 
-    // Otevřeno — vyčistíme starý stav a pošleme první zprávu
     setMessages([]);
     setLastAssistantId(null);
 
-    let autoMsg = "";
-    let firstReply = "";
-
-    if (context.project) {
-      autoMsg = "Co to je?";
-      firstReply = PROJECT_FIRST_REPLIES[context.project.id] || context.project.fact;
-    } else if (context.section) {
-      autoMsg = "Co je na tom nejzajímavější?";
-      firstReply = FIRST_REPLIES[context.section.id] || context.section.wow || context.section.summary;
-    } else {
-      autoMsg = "Ahoj, kdo jsi?";
-      firstReply =
-        "Jsem Echo. Hlas týhle stránky. Petr mě postavil, abych odpovídal na otázky, který bys normálně musel hledat sám. Nejsem chatbot na prodej. Jsem tu, protože ho baví stavět věci, který dávaj smysl.";
-    }
+    const { user: autoMsg, assistant: firstReply } = buildFirstMessage(context);
 
     autoSendTimerRef.current = setTimeout(() => {
       setMessages((prev) => {
-        // Už má zprávy? Někdo mezitím něco poslal — nespouštíme auto-send
         if (prev.length > 0) return prev;
         return [
-          ...prev,
           { role: "user" as const, content: autoMsg },
           { role: "assistant" as const, content: firstReply },
         ];
@@ -136,7 +136,8 @@ export default function ChatBot() {
     };
   }, [open, context.project?.id, context.section?.id]);
 
-  // Když user klikne mimo Echo (a ne na info-icon), zavri ho.
+  // ── Click outside ─────────────────────────────────────────────
+
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
@@ -145,16 +146,15 @@ export default function ChatBot() {
       if (target.closest("[data-echo-panel]")) return;
       closeEcho();
     }
-    const t = setTimeout(() => {
-      document.addEventListener("click", handleClick);
-    }, 0);
+    const t = setTimeout(() => document.addEventListener("click", handleClick), 0);
     return () => {
       clearTimeout(t);
       document.removeEventListener("click", handleClick);
     };
   }, [open, closeEcho]);
 
-  // Animace "karta vyjede nahoru"
+  // ── Card raise animation ──────────────────────────────────────
+
   useEffect(() => {
     if (!open) {
       if (raisedRef.current) {
@@ -162,27 +162,19 @@ export default function ChatBot() {
         raisedRef.current.style.transition = "";
         raisedRef.current = null;
       }
-      if (previousRaisedRef.current && previousRaisedRef.current !== raisedRef.current) {
-        previousRaisedRef.current.style.transform = "";
-        previousRaisedRef.current.style.transition = "";
-        previousRaisedRef.current = null;
-      }
-      setRaised(null);
       return;
     }
 
-    let selector = "";
-    if (context.project) {
-      selector = `[data-context-project="${context.project.id}"]`;
-    } else if (context.section) {
-      selector = `[data-context-section="${context.section.id}"]`;
-    }
+    const selector = context.project
+      ? `[data-context-project="${context.project.id}"]`
+      : context.section
+        ? `[data-context-section="${context.section.id}"]`
+        : null;
+
     if (!selector) return;
 
     const el = document.querySelector(selector) as HTMLElement | null;
-    if (!el) return;
-
-    if (raisedRef.current === el) return;
+    if (!el || raisedRef.current === el) return;
 
     if (raisedRef.current) {
       raisedRef.current.style.transform = "";
@@ -193,11 +185,10 @@ export default function ChatBot() {
     el.style.transition = "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s ease";
     el.style.transform = "translateY(-8px) scale(1.02)";
     el.style.boxShadow = "0 24px 64px rgba(0, 0, 0, 0.4)";
-
-    setRaised(Date.now());
   }, [open, context]);
 
-  // ESC zavře Echo
+  // ── ESC ───────────────────────────────────────────────────────
+
   useEffect(() => {
     if (!open) return;
     function handleKey(e: KeyboardEvent) {
@@ -207,14 +198,14 @@ export default function ChatBot() {
     return () => document.removeEventListener("keydown", handleKey);
   }, [open, closeEcho]);
 
-  // Input focus
+  // ── Input focus ──────────────────────────────────────────────
+
   useEffect(() => {
-    if (open) {
-      setTimeout(() => inputRef.current?.focus(), 700);
-    }
+    if (open) setTimeout(() => inputRef.current?.focus(), 700);
   }, [open]);
 
-  // Funkce pro poslání zprávy.
+  // ── Message helpers ───────────────────────────────────────────
+
   const addAssistantMessage = useCallback((content: string) => {
     setMessages((prev) => {
       const next = [...prev, { role: "assistant" as const, content }];
@@ -224,18 +215,23 @@ export default function ChatBot() {
   }, []);
 
   const sendUserMessage = useCallback((text: string) => {
-    setMessages((prev) => [...prev, { role: "user", content: text }]);
+    setMessages((prev) => [...prev, { role: "user" as const, content: text }]);
   }, []);
+
+  // ── API ───────────────────────────────────────────────────────
 
   async function callApi(
     msg: string,
     options: { questionType?: QuestionType; continueFrom?: boolean } = {},
   ) {
+    // Read current messages via ref to avoid stale closure
+    const currentMessages = messagesRef.current;
+
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        messages: [...messages, { role: "user", content: msg }],
+        messages: [...currentMessages, { role: "user", content: msg }],
         clickedContext: context,
         questionType: options.questionType,
         continueFrom: options.continueFrom,
@@ -257,6 +253,12 @@ export default function ChatBot() {
       addAssistantMessage(r);
     }
   }
+
+  // Keep a ref in sync with messages for API calls
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+
+  // ── Handlers ──────────────────────────────────────────────────
 
   async function handleSend(text?: string) {
     const msg = (text || input).trim();
@@ -280,14 +282,16 @@ export default function ChatBot() {
 
   async function handleMore() {
     if (loading || lastAssistantId === null) return;
-    const lastUserIdx = messages
-      .slice(0, lastAssistantId)
-      .findLastIndex((m) => m.role === "user");
+
+    const msgs = messagesRef.current;
+    const lastUserIdx = msgs.slice(0, lastAssistantId).findLastIndex((m) => m.role === "user");
     if (lastUserIdx === -1) return;
-    const lastUserText = messages[lastUserIdx].content;
+
+    const lastUserText = msgs[lastUserIdx].content;
     sendUserMessage("Více");
     setContinueTarget(lastAssistantId);
     setLoading(true);
+
     try {
       await callApi(lastUserText, { continueFrom: true });
     } finally {
@@ -308,6 +312,8 @@ export default function ChatBot() {
     !loading &&
     messages.length > 0 &&
     messages[messages.length - 1].role === "assistant";
+
+  // ── Render ────────────────────────────────────────────────────
 
   return (
     <>
@@ -338,17 +344,13 @@ export default function ChatBot() {
           boxShadow: open
             ? "0 32px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05)"
             : "0 0 0 rgba(0, 0, 0, 0)",
-
           right: 0,
           top: 0,
           bottom: 0,
           width: "min(440px, 100vw)",
           maxWidth: "100vw",
           height: "100dvh",
-
-          transform: open
-            ? "translateX(0) translateY(0)"
-            : "translateX(100%) translateY(0)",
+          transform: open ? "translateX(0)" : "translateX(100%)",
           transition: "transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease",
           opacity: open ? 1 : 0,
         }}
@@ -430,10 +432,7 @@ export default function ChatBot() {
         >
           {messages.length === 0 && (
             <div className="flex h-full flex-col items-center justify-center text-center">
-              <p
-                className="mb-2 text-base font-medium"
-                style={{ color: "var(--text-primary)" }}
-              >
+              <p className="mb-2 text-base font-medium" style={{ color: "var(--text-primary)" }}>
                 Přemýšlím…
               </p>
             </div>
@@ -485,11 +484,8 @@ export default function ChatBot() {
           )}
         </div>
 
-        {/* Tlačítko Více */}
-        <div
-          className="border-t px-5 py-3"
-          style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}
-        >
+        {/* Více button */}
+        <div className="border-t px-5 py-3" style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}>
           {canShowMore && (
             <div className="flex justify-start">
               <button
@@ -509,10 +505,7 @@ export default function ChatBot() {
         </div>
 
         {/* Input */}
-        <div
-          className="border-t p-4"
-          style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}
-        >
+        <div className="border-t p-4" style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}>
           <div
             className="flex items-end gap-2 rounded-2xl px-3 py-2"
             style={{
@@ -528,19 +521,13 @@ export default function ChatBot() {
               placeholder="Napiš otázku..."
               rows={1}
               className="max-h-24 min-h-[36px] flex-1 resize-none bg-transparent px-1 py-1.5 text-sm outline-none"
-              style={{
-                color: "var(--text-primary)",
-                caretColor: "var(--gold)",
-              }}
+              style={{ color: "var(--text-primary)", caretColor: "var(--gold)" }}
             />
             <button
               onClick={() => handleSend()}
               disabled={!input.trim() || loading}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all disabled:opacity-30"
-              style={{
-                background: "var(--gold)",
-                color: "var(--text-inverse)",
-              }}
+              style={{ background: "var(--gold)", color: "var(--text-inverse)" }}
             >
               <svg
                 width="14"
@@ -560,7 +547,7 @@ export default function ChatBot() {
         </div>
       </div>
 
-      {/* Mobile override */}
+      {/* Mobile override — CSS custom property avoids stale closure in styled-jsx */}
       <style jsx global>{`
         @media (max-width: 640px) {
           [data-echo-panel]:not([data-echo-panel="backdrop"]) {
@@ -572,15 +559,22 @@ export default function ChatBot() {
             height: 85dvh !important;
             border-radius: 24px 24px 0 0 !important;
             border-bottom: none !important;
-            transform: ${open ? "translateY(0)" : "translateY(100%)"} !important;
+            transform: translateY(var(--echo-mobile-transform, 100%)) !important;
           }
+        }
+      `}</style>
+      {/* Set the CSS variable via inline style on the panel */}
+      <style>{`
+        [data-echo-panel]:not([data-echo-panel="backdrop"]) {
+          --echo-mobile-transform: ${open ? "0" : "100%"};
         }
       `}</style>
     </>
   );
 }
 
-// Prémiová verze i triggeru — elegantní animace, Apple-style
+// ── EchoTrigger ─────────────────────────────────────────────────
+
 export function EchoTrigger({
   projectId,
   sectionId,
@@ -610,7 +604,7 @@ export function EchoTrigger({
     <button
       data-echo-trigger
       onClick={handleClick}
-      className={`group relative inline-flex h-8 w-8 items-center justify-center rounded-full ${className}`}
+      className="group relative inline-flex h-8 w-8 items-center justify-center rounded-full"
       style={{
         backgroundColor: "rgba(255, 255, 255, 0.03)",
         border: "1px solid rgba(255, 255, 255, 0.06)",
