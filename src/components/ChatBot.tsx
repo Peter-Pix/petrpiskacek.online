@@ -71,15 +71,15 @@ export default function ChatBot() {
 
   const PROJECT_FIRST_REPLIES: Record<string, string> = {
     vocalbrain:
-      "Že druhej den pozná, že mluvíš o tom samým projektu, a přidá k němu. Není to jen přepisovač — je to parťák, co si pamatuje.",
+      "Brainstorming o projektu nahlas — AI to celé naplánuje. Mluvíš, systém to přepíše, strukturalizuje, udělá to-do listy. Druhej den pozná, že jde o ten samej projekt, a přidá nový informace.",
     stylemorph:
-      "Že řekneš mu styl, ono to předělá v reálném čase a můžeš si to stáhnout. Malý firmy platí tisíce za redesign. Tohle to umí za pár vteřin.",
+      "Řekneš mu styl, ono to v reálném čase předělá celej web a můžeš si ho stáhnout. Malý firmy platí tisíce za redesign. Tohle to umí za pár vteřin.",
     autoblog:
-      "Že zvolíš téma, on sám zjistí co lidi aktuálně zajímá, a napíše o tom článek. Celej web se buduje sám. Petr jen říká kam.",
+      "Zvolíš téma, AI dohledá co lidi aktuálně zajímá, vyhledá informace, napíše články, zkontroluje je, vylepší, nasdílí online. Celej web se buduje a rozvíjí sám.",
     scrollo:
-      "Že všechno běží v prohlížeči. Žádná databáze, žádný tracking, žádná reklama. Prostě nástroje, který dělaj co maj, a pak zmizí.",
+      "Jednoduchý nástroje. Bez reklam. Všechno běží v prohlížeči — žádná databáze, žádný tracking, žádná reklama. Petr je staví, protože sám potřebuje věci, který dělaj přesně to co maj.",
     "4rap":
-      "Že je to k ničemu. A v tom je krása. 1200 interpretů, 6000 vazeb, a Petr říká, že je to k ničemu. Protože to nedělá pro nikoho. Dělá to, protože ho to baví.",
+      "Databáze českýho rapu. Kdo s kým, kdo co, odkud. 1200+ interpretů, skoro 6000 vazeb. Petr říká, že je to k ničemu. A v tom je krása — nedělá to pro nikoho, dělá to, protože ho to baví.",
   };
 
   // Auto-send first message when Echo opens
