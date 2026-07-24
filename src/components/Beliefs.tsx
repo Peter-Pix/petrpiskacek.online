@@ -6,7 +6,7 @@ export default function Beliefs() {
   const beliefs = [
     {
       title: "Ani zlý, ani hodný.",
-      text: "Jen myšlenka a rychlostroj. (Jen ty a tvůj nástroj.)",
+      text: "Jen myšlenka a rychlostroj.",
     },
     {
       title: "Neudělá to za tebe. Udělá to, co mu řekneš.",
