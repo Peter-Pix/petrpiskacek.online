@@ -15,20 +15,20 @@ export default function Footer() {
               href="https://petrpiskacek.cz"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs transition-colors"
+              className="inline-flex items-center gap-1 text-xs transition-colors hover:text-gold"
               style={{ color: "var(--text-muted)" }}
             >
-              .cz
+              .cz — kdo jsem
               <ExternalLinkIcon size={10} />
             </a>
             <a
               href="https://petrpiskacek.cloud"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs transition-colors"
+              className="inline-flex items-center gap-1 text-xs transition-colors hover:text-gold"
               style={{ color: "var(--text-muted)" }}
             >
-              .cloud
+              .cloud — AI playground
               <ExternalLinkIcon size={10} />
             </a>
             <a
