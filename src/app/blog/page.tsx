@@ -4,9 +4,36 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Blog — Petr Piskacek",
   description: "Myšlenky o AI, programování, životě a všem mezi tím.",
+  openGraph: {
+    title: "Blog — Petr Piskacek",
+    description: "Myšlenky o AI, programování, životě a všem mezi tím.",
+    url: "https://petrpiskacek.online/blog",
+    siteName: "Petr Piskacek",
+    locale: "cs_CZ",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blog — Petr Piskacek",
+    description: "Myšlenky o AI, programování, životě a všem mezi tím.",
+  },
 };
 
 const posts = [
+  {
+    slug: "proc-je-dobry-napad-pouzivat-ai",
+    title: "Proč je dobrý nápad používat AI",
+    description: "Největší zvýšení osobní produktivity od nástupu internetu. Kolik času a peněz ti AI může reálně ušetřit.",
+    date: "2026-07-24",
+    readTime: "5 min",
+  },
+  {
+    slug: "copilot-v-poznamkach",
+    title: "Copilot v Poznámkách M365 mě fakt překvapil. A ukázal mi, kam směřuje práce s informacemi.",
+    description: "Celý dokument jako kontext, okamžité editace, projekty místo izolovaných poznámek — a čtyři nápady, kam by to šlo posunout dál.",
+    date: "2026-07-24",
+    readTime: "4 min",
+  },
   {
     slug: "ai-neni-nepritel",
     title: "AI není nepřítel. Jen jsme se ještě nenaučili jeho řeč.",

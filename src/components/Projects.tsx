@@ -8,7 +8,7 @@ const projects = [
     id: "vocalbrain",
     name: "VocalBrain",
     description:
-      "Projekt založenej na audio transkripci. Člověk prostě zapne nahrávání a mluví o projektu. O něčem, co chce dělat. Nebo prostě jenom o plánek na víkend. Všechny myšlenky se přepíšou, strukturalizujou, vytáhnou se hlavní body, udělají se to-do listy, celej projekt se naplánuje — a to jenom z našeho brainstormingu.",
+      "Projekt založenej na audio transkripci. Člověk prostě zapne nahrávání a mluví o projektu. O něčem, co chce dělat. Nebo prostě jenom o plánech na víkend. Všechny myšlenky se přepíšou, strukturalizujou, vytáhnou se hlavní body, udělají se to-do listy, celej projekt se naplánuje — a to jenom z našeho brainstormingu.",
     detail:
       "Když přijdeme další den a začneme zase o projektu mluvit, systém automaticky pozná, že se jedná o ten týž projekt a přidá nové informace k již rozpracovanému. Takhle můžeme každý den pouze pomocí brainstormingu dopracovat projekty až ke kompletnímu návrhu.",
     link: null,

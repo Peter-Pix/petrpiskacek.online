@@ -15,13 +15,13 @@ const phases: Phase[] = [
     period: "2023",
     title: "Objevování",
     body: "Člověk cítil změnu. Nemusel jsem programovat, stačilo mluvit. A ještě to nemělo zábrany — pro obě strany to byl úplně novej svět. Krok do neznáma.",
-    highlight: "Poprvý jsem si připadal, že mluvím s někym, kdo odpovídá.",
+    highlight: "Poprvý jsem si připadal, že mluvím s někým, kdo odpovídá.",
   },
   {
     period: "2023 — 2024",
     title: "Cenzura a limity",
     body: "Pak přišly zpátky ty trapný filtry. Půl roku, rok na to. Modely začaly bejt strašně striktní. Nechtěly pomoct ani s normálníma věcma.",
-    highlight: "Chuť, učit se a touha vidět dál. Vypromtovat správně.",
+    highlight: "Chuť, učit se a touha vidět dál. Vypromptovat správně.",
   },
   {
     period: "2024",
