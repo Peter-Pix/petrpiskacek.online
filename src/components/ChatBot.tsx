@@ -475,7 +475,7 @@ export default function ChatBot() {
               {currentSuggestions.map((s) => (
                 <button
                   key={s.id}
-                  onClick={() => handleSuggestionClick(s.text, s.type)}
+                  onClick={(e) => { e.stopPropagation(); handleSuggestionClick(s.text, s.type); }}
                   className="rounded-full px-3 py-1 text-xs font-medium transition-colors hover:bg-white/5"
                   style={{
                     backgroundColor: "rgba(255, 255, 255, 0.04)",

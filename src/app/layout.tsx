@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Footer from "@/components/Footer";
 
 const defaultUrl = "https://petrpiskacek.online";
 
@@ -35,11 +36,13 @@ export const metadata: Metadata = {
     type: "website",
     locale: "cs_CZ",
     url: defaultUrl,
+    images: [{ url: `${defaultUrl}/og-image.png`, width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Petr Piskáček — příběh, vize, proč to dělám",
     description: "Nejsem tady, abych ti prodal AI. Jsem tady, abych ti ukázal, co s ní jde dělat.",
+    images: [`${defaultUrl}/og-image.png`],
   },
 };
 
@@ -48,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="cs" className="scroll-smooth" suppressHydrationWarning>
       <body className="min-h-screen bg-zinc-950 text-zinc-100 antialiased selection:bg-gold/30 selection:text-white">
         {children}
+        <Footer />
       </body>
     </html>
   );
