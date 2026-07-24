@@ -39,7 +39,7 @@ export default function Story() {
             </div>
             <div>
               <p className="text-xl font-medium leading-relaxed md:text-2xl" style={{ color: 'var(--text)' }}>
-                &bdquo;Z ničeho se mohl udělat něco. Člověk nepotřeboval cihly, nepotřeboval peníze. Potřeboval jenom myšlenku.&ldquo;
+                &bdquo;Z ničeho jsem mohl udělat něco. Nepotřeboval jsem cihly, peníze ani tým. Potřeboval jsem jen myšlenku.&ldquo;
               </p>
             </div>
           </div>
