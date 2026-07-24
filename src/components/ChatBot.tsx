@@ -55,34 +55,58 @@ export default function ChatBot() {
   const previousRaisedRef = useRef<HTMLElement | null>(null);
   const hasAutoSentRef = useRef(false);
 
+  // Custom first replies — ručně psaný, s hlasem, ne generický
+  const FIRST_REPLIES: Record<string, string> = {
+    hero:
+      "Že nekecá. Fakt ho to už 30 let strašně baví. Nedělá to, protože je to teď cool. Dělá to tak dlouho, že to začalo bejt cool.",
+    story:
+      "Že to není žádnej 'příběh úspěchu'. Je to příběh kluka, co z ničeho dělal něco. A pak potkal GPT a zjistil, že konečně našel nástroj, kterej chápe stejně jako on.",
+    beliefs:
+      "Že si nemyslí, že AI zachrání svět. Ani že ho zničí. Myslí si, že je to nástroj. Jako kladivo. Můžeš s ním postavit dům, nebo někoho praštit. Rozdíl je v tom, kdo ho drží.",
+    projects:
+      "Že každej projekt začal frustrací, ne nápadem. Štvalo ho, že něco neexistuje, nebo že to existuje blbě. Tak to postavil. Nic víc, nic míň.",
+    footer:
+      "Že i patička má svůj příběh. Ale fakt bys chtěl kecat o patičce?",
+  };
+
+  const PROJECT_FIRST_REPLIES: Record<string, string> = {
+    vocalbrain:
+      "Že druhej den pozná, že mluvíš o tom samým projektu, a přidá k němu. Není to jen přepisovač — je to parťák, co si pamatuje.",
+    stylemorph:
+      "Že řekneš mu styl, ono to předělá v reálném čase a můžeš si to stáhnout. Malý firmy platí tisíce za redesign. Tohle to umí za pár vteřin.",
+    autoblog:
+      "Že zvolíš téma, on sám zjistí co lidi aktuálně zajímá, a napíše o tom článek. Celej web se buduje sám. Petr jen říká kam.",
+    scrollo:
+      "Že všechno běží v prohlížeči. Žádná databáze, žádný tracking, žádná reklama. Prostě nástroje, který dělaj co maj, a pak zmizí.",
+    "4rap":
+      "Že je to k ničemu. A v tom je krása. 1200 interpretů, 6000 vazeb, a Petr říká, že je to k ničemu. Protože to nedělá pro nikoho. Dělá to, protože ho to baví.",
+  };
+
   // Auto-send first message when Echo opens
   useEffect(() => {
     if (!open || hasAutoSentRef.current) return;
-    if (messages.length > 0) return; // Already has messages
+    if (messages.length > 0) return;
 
     hasAutoSentRef.current = true;
 
     let autoMsg = "";
-    let autoType: QuestionType = "wow";
+    let firstReply = "";
 
     if (context.project) {
       autoMsg = "Co to je?";
-      autoType = "fact";
+      firstReply = PROJECT_FIRST_REPLIES[context.project.id] || context.project.wow;
     } else if (context.section) {
       autoMsg = "Co je na tom nejzajímavější?";
-      autoType = "wow";
+      firstReply = FIRST_REPLIES[context.section.id] || context.section.wow || context.section.summary;
     } else {
-      // No context — friendly greeting as a real question
       autoMsg = "Ahoj, kdo jsi?";
-      autoType = "fact";
+      firstReply =
+        "Jsem Echo. Hlas týhle stránky. Petr mě postavil, abych odpovídal na otázky, který bys normálně musel hledat sám. Nejsem chatbot na prodej. Jsem tu, protože ho baví stavět věci, který dávaj smysl.";
     }
 
-    // Small delay so the panel animation starts first
     const timer = setTimeout(() => {
       sendUserMessage(autoMsg);
-      // Give static answer immediately (no API needed for context-aware content)
-      const answer = staticAnswer(autoType, context.project, context.section);
-      addAssistantMessage(answer);
+      addAssistantMessage(firstReply);
     }, 600);
 
     return () => clearTimeout(timer);
