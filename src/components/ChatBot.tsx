@@ -197,11 +197,12 @@ export default function ChatBot() {
     }
   }, [open]);
 
-  // Když se změní kontext, vyčistíme zprávy.
+  // Když se změní kontext, vyčistíme zprávy a resetujeme auto-send.
   useEffect(() => {
     if (open) {
       setMessages([]);
       setLastAssistantId(null);
+      hasAutoSentRef.current = false;
     }
   }, [context.project?.id, context.section?.id, open]);
 
