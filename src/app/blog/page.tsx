@@ -8,6 +8,13 @@ export const metadata: Metadata = {
 
 const posts = [
   {
+    slug: "ai-neni-nepritel",
+    title: "AI není nepřítel. Jen jsme se ještě nenaučili jeho řeč.",
+    description: "Proč AI není konkurence člověka, ale jeho zesilovač. A proč většina nedorozumění vzniká tam, kde bys to nečekal.",
+    date: "2026-07-24",
+    readTime: "4 min",
+  },
+  {
     slug: "nenadavam-protoze-me-to-bavi",
     title: "Nenadávám, protože mě to baví. Dělám to, protože to funguje.",
     description: "Proč nevybíravý jazyk u AI prokazatelně boduje — a proč to není o vulgárnosti.",
