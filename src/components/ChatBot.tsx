@@ -9,13 +9,12 @@ import {
   type Project,
   type Section,
   type QuestionType,
-  suggestionsForContext,
   staticAnswer,
 } from "@/lib/site-content";
 
 type Message = { role: "user" | "assistant"; content: string };
 
-// Client-side routing — 90% případů bez API.
+// Quick replies for common inputs
 const QUICK_REPLIES: Record<string, string> = {
   "ahoj": "Ahoj. Co tě zajímá?",
   "čau": "Ahoj. Co tě zajímá?",
@@ -49,23 +48,55 @@ export default function ChatBot() {
   const [loading, setLoading] = useState(false);
   const [lastAssistantId, setLastAssistantId] = useState<number | null>(null);
   const [continueTarget, setContinueTarget] = useState<number | null>(null);
-  const [raised, setRaised] = useState<number | null>(null); // ID karty, která je "vyjeta nahoru"
+  const [raised, setRaised] = useState<number | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const raisedRef = useRef<HTMLElement | null>(null);
   const previousRaisedRef = useRef<HTMLElement | null>(null);
+  const hasAutoSentRef = useRef(false);
 
-  // Když user klikne mimo Echo (a ne na info-icon), zavři ho.
+  // Auto-send first message when Echo opens
+  useEffect(() => {
+    if (!open || hasAutoSentRef.current) return;
+    if (messages.length > 0) return; // Already has messages
+
+    hasAutoSentRef.current = true;
+
+    let autoMsg = "";
+    let autoType: QuestionType = "wow";
+
+    if (context.project) {
+      autoMsg = "Co to je?";
+      autoType = "fact";
+    } else if (context.section) {
+      autoMsg = "Co je na tom nejzajímavější?";
+      autoType = "wow";
+    } else {
+      // No context — friendly greeting as a real question
+      autoMsg = "Ahoj, kdo jsi?";
+      autoType = "fact";
+    }
+
+    // Small delay so the panel animation starts first
+    const timer = setTimeout(() => {
+      sendUserMessage(autoMsg);
+      // Give static answer immediately (no API needed for context-aware content)
+      const answer = staticAnswer(autoType, context.project, context.section);
+      addAssistantMessage(answer);
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [open]);
+
+  // Když user klikne mimo Echo (a ne na info-icon), zavri ho.
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
       const target = e.target as HTMLElement;
-      // Pokud kliknul na info-icon, necháme ChatBot se otevřít (handle se v InfoIconButton)
       if (target.closest("[data-echo-trigger]")) return;
       if (target.closest("[data-echo-panel]")) return;
       closeEcho();
     }
-    // Přidáme listener s mírným delay, aby se nejdřív zpracoval klik na info-icon
     const t = setTimeout(() => {
       document.addEventListener("click", handleClick);
     }, 0);
@@ -75,10 +106,9 @@ export default function ChatBot() {
     };
   }, [open, closeEcho]);
 
-  // Animace "karta vyjede nahoru" — najdeme element a přidáme třídu.
+  // Animace "karta vyjede nahoru"
   useEffect(() => {
     if (!open) {
-      // Skryjeme raised
       if (raisedRef.current) {
         raisedRef.current.style.transform = "";
         raisedRef.current.style.transition = "";
@@ -93,7 +123,6 @@ export default function ChatBot() {
       return;
     }
 
-    // Najdeme kontextovou kartu/sekci podle data-context atributu.
     let selector = "";
     if (context.project) {
       selector = `[data-context-project="${context.project.id}"]`;
@@ -105,16 +134,13 @@ export default function ChatBot() {
     const el = document.querySelector(selector) as HTMLElement | null;
     if (!el) return;
 
-    // Pokud už je to samý element, nic neměň.
     if (raisedRef.current === el) return;
 
-    // Resetuj předchozí
     if (raisedRef.current) {
       raisedRef.current.style.transform = "";
       raisedRef.current.style.transition = "";
     }
 
-    // "Vyjede nahoru" — zvětšíme, zvedneme, přidáme stín.
     raisedRef.current = el;
     el.style.transition = "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s ease";
     el.style.transform = "translateY(-8px) scale(1.02)";
@@ -122,6 +148,13 @@ export default function ChatBot() {
 
     setRaised(Date.now());
   }, [open, context]);
+
+  // Reset auto-send flag when Echo closes
+  useEffect(() => {
+    if (!open) {
+      hasAutoSentRef.current = false;
+    }
+  }, [open]);
 
   // ESC zavře Echo
   useEffect(() => {
@@ -136,7 +169,7 @@ export default function ChatBot() {
   // Input focus
   useEffect(() => {
     if (open) {
-      setTimeout(() => inputRef.current?.focus(), 500);
+      setTimeout(() => inputRef.current?.focus(), 700);
     }
   }, [open]);
 
@@ -212,18 +245,6 @@ export default function ChatBot() {
     }
   }
 
-  function handleSuggestionClick(text: string, type: QuestionType) {
-    if (loading) return;
-    sendUserMessage(text);
-    if (context.project || context.section) {
-      const answer = staticAnswer(type, context.project, context.section);
-      addAssistantMessage(answer);
-    } else {
-      setLoading(true);
-      callApi(text, { questionType: type }).finally(() => setLoading(false));
-    }
-  }
-
   async function handleMore() {
     if (loading || lastAssistantId === null) return;
     const lastUserIdx = messages
@@ -249,7 +270,6 @@ export default function ChatBot() {
     }
   }
 
-  const currentSuggestions = suggestionsForContext(context.section, context.project);
   const canShowMore =
     lastAssistantId !== null &&
     !loading &&
@@ -258,7 +278,7 @@ export default function ChatBot() {
 
   return (
     <>
-      {/* Backdrop — rozostří pozadí, je pod echo-panelem */}
+      {/* Backdrop */}
       <div
         data-echo-panel
         onClick={closeEcho}
@@ -273,12 +293,11 @@ export default function ChatBot() {
         aria-hidden="true"
       />
 
-      {/* Echo panel — plovoucí glassmorph, vyjíždí z boku (desktop) / zespodu (mobil) */}
+      {/* Echo panel */}
       <div
         data-echo-panel
-        className="fixed z-50 flex flex-col overflow-hidden transition-all duration-700"
+        className="fixed z-50 flex flex-col overflow-hidden"
         style={{
-          // Glassmorph
           backgroundColor: "rgba(20, 20, 25, 0.65)",
           backdropFilter: "blur(40px) saturate(180%)",
           WebkitBackdropFilter: "blur(40px) saturate(180%)",
@@ -287,8 +306,6 @@ export default function ChatBot() {
             ? "0 32px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05)"
             : "0 0 0 rgba(0, 0, 0, 0)",
 
-          // Desktop: vyjíždí zprava
-          // Mobil: vyjíždí zespodu, přes celou obrazovku
           right: 0,
           top: 0,
           bottom: 0,
@@ -296,12 +313,11 @@ export default function ChatBot() {
           maxWidth: "100vw",
           height: "100dvh",
 
-          // Animace vstupu
           transform: open
             ? "translateX(0) translateY(0)"
             : "translateX(100%) translateY(0)",
-
-          // Mobil override
+          transition: "transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease",
+          opacity: open ? 1 : 0,
         }}
       >
         {/* Header */}
@@ -364,11 +380,7 @@ export default function ChatBot() {
               <strong style={{ color: "var(--gold)" }}>{contextBadge}</strong>
             </span>
             <button
-              onClick={() => {
-                setContextBadge(null);
-                // Vyčistit i context — uživatel nechce mluvit o ničem konkrétním
-                // Tady nemůžeme volat openEcho bez resetu, tak to řešíme přes wrapper
-              }}
+              onClick={() => setContextBadge(null)}
               className="shrink-0 text-xs underline"
               style={{ color: "var(--text-muted)" }}
             >
@@ -389,15 +401,7 @@ export default function ChatBot() {
                 className="mb-2 text-base font-medium"
                 style={{ color: "var(--text-primary)" }}
               >
-                {context.project || context.section
-                  ? "Co tě na tom zajímá?"
-                  : "Zeptej se, nebo klikni na info u projektu."}
-              </p>
-              <p
-                className="text-xs"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Krátké odpovědi. Pokud chceš víc, klikni na ↻.
+                Přemýšlím…
               </p>
             </div>
           )}
@@ -448,13 +452,13 @@ export default function ChatBot() {
           )}
         </div>
 
-        {/* Tlačítko "Více" + Suggestions */}
+        {/* Tlačítko Více */}
         <div
           className="border-t px-5 py-3"
           style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}
         >
           {canShowMore && (
-            <div className="mb-3 flex justify-start">
+            <div className="flex justify-start">
               <button
                 onClick={handleMore}
                 disabled={loading}
@@ -467,25 +471,6 @@ export default function ChatBot() {
               >
                 {loading && continueTarget !== null ? "Přemýšlím…" : "↻ Více"}
               </button>
-            </div>
-          )}
-
-          {messages.length === 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {currentSuggestions.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={(e) => { e.stopPropagation(); handleSuggestionClick(s.text, s.type); }}
-                  className="rounded-full px-3 py-1 text-xs font-medium transition-colors hover:bg-white/5"
-                  style={{
-                    backgroundColor: "rgba(255, 255, 255, 0.04)",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
-                    color: "var(--text-secondary)",
-                  }}
-                >
-                  {s.text}
-                </button>
-              ))}
             </div>
           )}
         </div>
@@ -542,7 +527,7 @@ export default function ChatBot() {
         </div>
       </div>
 
-      {/* Mobilní override — slide zespodu */}
+      {/* Mobile override */}
       <style jsx global>{`
         @media (max-width: 640px) {
           [data-echo-panel]:not([data-echo-panel="backdrop"]) {
@@ -555,7 +540,6 @@ export default function ChatBot() {
             border-radius: 24px 24px 0 0 !important;
             border-bottom: none !important;
             transform: ${open ? "translateY(0)" : "translateY(100%)"} !important;
-            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
           }
         }
       `}</style>
@@ -563,7 +547,7 @@ export default function ChatBot() {
   );
 }
 
-// Komponenta pro "i" trigger — klik otevře Echo s daným kontextem.
+// Prémiová verze i triggeru — elegantní animace, Apple-style
 export function EchoTrigger({
   projectId,
   sectionId,
@@ -593,26 +577,34 @@ export function EchoTrigger({
     <button
       data-echo-trigger
       onClick={handleClick}
-      className={`group inline-flex h-7 w-7 items-center justify-center rounded-full transition-all duration-300 hover:scale-110 active:scale-95 ${className}`}
+      className={`group relative inline-flex h-8 w-8 items-center justify-center rounded-full ${className}`}
       style={{
-        backgroundColor: "rgba(255, 255, 255, 0.04)",
-        border: "1px solid rgba(255, 255, 255, 0.08)",
+        backgroundColor: "rgba(255, 255, 255, 0.03)",
+        border: "1px solid rgba(255, 255, 255, 0.06)",
         color: "var(--text-muted)",
+        transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+        overflow: "visible",
       }}
       aria-label="Zeptat se Echa"
       title="Zeptat se Echa"
       onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = "rgba(200, 150, 46, 0.12)";
-        e.currentTarget.style.borderColor = "rgba(200, 150, 46, 0.3)";
-        e.currentTarget.style.color = "var(--gold)";
+        const el = e.currentTarget;
+        el.style.backgroundColor = "rgba(200, 150, 46, 0.1)";
+        el.style.borderColor = "rgba(200, 150, 46, 0.35)";
+        el.style.color = "var(--gold)";
+        el.style.transform = "scale(1.12)";
+        el.style.boxShadow = "0 0 20px rgba(200, 150, 46, 0.2), 0 0 40px rgba(200, 150, 46, 0.08)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.04)";
-        e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)";
-        e.currentTarget.style.color = "var(--text-muted)";
+        const el = e.currentTarget;
+        el.style.backgroundColor = "rgba(255, 255, 255, 0.03)";
+        el.style.borderColor = "rgba(255, 255, 255, 0.06)";
+        el.style.color = "var(--text-muted)";
+        el.style.transform = "scale(1)";
+        el.style.boxShadow = "none";
       }}
     >
-      <InfoIcon size={14} />
+      <InfoIcon size={15} />
     </button>
   );
 }
