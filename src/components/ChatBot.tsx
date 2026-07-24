@@ -56,13 +56,14 @@ export default function ChatBot() {
   const hasAutoSentRef = useRef(false);
 
   // Custom first replies — ručně psaný, s hlasem, ne generický
+  // Žádný "programoval od dětství" — to je rare insider fact, ne úvod
   const FIRST_REPLIES: Record<string, string> = {
     hero:
-      "Že nekecá. Fakt ho to už 30 let strašně baví. Nedělá to, protože je to teď cool. Dělá to tak dlouho, že to začalo bejt cool.",
+      "Že nekecá. Neprodává AI. Ukazuje, co umí. A dává to smysl. Celej tenhle web je důkaz, ne slib.",
     story:
-      "Že to není žádnej 'příběh úspěchu'. Je to příběh kluka, co z ničeho dělal něco. A pak potkal GPT a zjistil, že konečně našel nástroj, kterej chápe stejně jako on.",
+      "Že to není žádnej 'příběh úspěchu'. Je to příběh člověka, kterej potkal nástroj, kterej konečně chápe stejně jako on. A místo aby ho prodával, tak s ním staví.",
     beliefs:
-      "Že si nemyslí, že AI zachrání svět. Ani že ho zničí. Myslí si, že je to nástroj. Jako kladivo. Můžeš s ním postavit dům, nebo někoho praštit. Rozdíl je v tom, kdo ho drží.",
+      "Že si nemyslí, že AI zachrání svět. Ani že ho zničí. Je to nástroj. Jako kladivo. Můžeš s ním postavit dům, nebo někoho praštit. Rozdíl je v tom, kdo ho drží.",
     projects:
       "Že každej projekt začal frustrací, ne nápadem. Štvalo ho, že něco neexistuje, nebo že to existuje blbě. Tak to postavil. Nic víc, nic míň.",
     footer:
@@ -82,7 +83,7 @@ export default function ChatBot() {
       "Databáze českýho rapu. Kdo s kým, kdo co, odkud. 1200+ interpretů, skoro 6000 vazeb. Petr říká, že je to k ničemu. A v tom je krása — nedělá to pro nikoho, dělá to, protože ho to baví.",
   };
 
-  // Auto-send first message when Echo opens
+  // Auto-send first message when Echo opens or context changes
   useEffect(() => {
     if (!open || hasAutoSentRef.current) return;
     if (messages.length > 0) return;
@@ -94,7 +95,7 @@ export default function ChatBot() {
 
     if (context.project) {
       autoMsg = "Co to je?";
-      firstReply = PROJECT_FIRST_REPLIES[context.project.id] || context.project.wow;
+      firstReply = PROJECT_FIRST_REPLIES[context.project.id] || context.project.fact;
     } else if (context.section) {
       autoMsg = "Co je na tom nejzajímavější?";
       firstReply = FIRST_REPLIES[context.section.id] || context.section.wow || context.section.summary;
@@ -110,7 +111,7 @@ export default function ChatBot() {
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [open]);
+  }, [open, context.project?.id, context.section?.id]);
 
   // Když user klikne mimo Echo (a ne na info-icon), zavri ho.
   useEffect(() => {
