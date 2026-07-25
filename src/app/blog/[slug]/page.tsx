@@ -4,7 +4,7 @@ import Link from "next/link";
 const posts: Record<string, { title: string; date: string; content: string[] }> = {
   "proc-je-dobry-napad-pouzivat-ai": {
     title: "Proč je dobrý nápad používat AI",
-    date: "2026-07-08",
+    date: "2026-06-18",
     content: [
       "",
       "**Hlavní myšlenka**",
@@ -167,7 +167,7 @@ const posts: Record<string, { title: string; date: string; content: string[] }> 
   },
   "copilot-v-poznamkach": {
     title: "Copilot v Poznámkách M365 mě fakt překvapil. A ukázal mi, kam směřuje práce s informacemi.",
-    date: "2026-07-15",
+    date: "2026-06-30",
     content: [
       "",
       "Copilot v Poznámkách Microsoft 365 mě fakt překvapil.",
@@ -230,7 +230,7 @@ const posts: Record<string, { title: string; date: string; content: string[] }> 
   },
   "ai-neni-nepritel": {
     title: "AI není nepřítel. Jen jsme se ještě nenaučili jeho řeč.",
-    date: "2026-07-20",
+    date: "2026-07-05",
     content: [
       "",
       "Víte, že:",
@@ -674,7 +674,7 @@ const posts: Record<string, { title: string; date: string; content: string[] }> 
 
   "nenadavam-protoze-me-to-bavi": {
     title: "Nenadávám, protože mě to baví. Dělám to, protože to funguje.",
-    date: "2026-06-22",
+    date: "2026-06-10",
     content: [
       "",
       "**Proč nevybíravý jazyk u AI prokazatelně boduje — a proč to není o vulgárnosti.**",
