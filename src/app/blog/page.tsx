@@ -21,6 +21,41 @@ export const metadata: Metadata = {
 
 const posts = [
   {
+    slug: "ai-je-trochu-zenska",
+    title: "AI je trochu ženská",
+    description: "Nepředvídatelná, občas zaseknutá, a nejlepší řešení je někdy začít novej chat. Myslím to jako kompliment.",
+    date: "2026-07-25",
+    readTime: "2 min",
+  },
+  {
+    slug: "proc-nas-to-stve",
+    title: "Umělá inteligence. Proč nás to vlastně štve?",
+    description: "Umělý kozy — v pohodě. Umělý květiny — jasný. Umělá inteligence — problém. Není to náhodou tím druhým slovem?",
+    date: "2026-07-24",
+    readTime: "2 min",
+  },
+  {
+    slug: "ai-neni-prirozena",
+    title: "AI není přirozená. A právě proto je tak užitečná.",
+    description: "Stejně jako auto není přirozený, letadlo není přirozený a elektřina není přirozená. Přesto je používáme. Proč by AI měla být výjimka?",
+    date: "2026-07-23",
+    readTime: "4 min",
+  },
+  {
+    slug: "co-dokazu-s-ai",
+    title: "Co všechno dokážu, když se s AI naučím spolupracovat?",
+    description: "Poprvé v historii máme partnera, který překlenuje mezery mezi tím, co chceme dokázat, a tím, co zatím neumíme.",
+    date: "2026-07-22",
+    readTime: "4 min",
+  },
+  {
+    slug: "proc-se-lide-boji-ai",
+    title: "Proč se lidé bojí AI",
+    description: "Strach z AI není o technologii. Je o nás. O změně, nejistotě a paradoxu, který možná nečekáš.",
+    date: "2026-07-21",
+    readTime: "5 min",
+  },
+  {
     slug: "ai-neni-nepritel",
     title: "AI není nepřítel. Jen jsme se ještě nenaučili jeho řeč.",
     description: "Proč AI není konkurence člověka, ale jeho zesilovač. A proč většina nedorozumění vzniká tam, kde bys to nečekal.",
