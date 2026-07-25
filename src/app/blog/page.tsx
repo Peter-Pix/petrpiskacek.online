@@ -21,6 +21,13 @@ export const metadata: Metadata = {
 
 const posts = [
   {
+    slug: "vyjimecni-obycejnaci",
+    title: "Výjimeční obyčejňáci",
+    description: "Nejde o to být nejchytřejší. Jde o to nebýt nejhloupější. A to je maximalistický minimalismus v praxi.",
+    date: "2026-07-25",
+    readTime: "4 min",
+  },
+  {
     slug: "ai-je-trochu-zenska",
     title: "AI je trochu ženská",
     description: "Nepředvídatelná, občas zaseknutá, a nejlepší řešení je někdy začít novej chat. Myslím to jako kompliment.",
