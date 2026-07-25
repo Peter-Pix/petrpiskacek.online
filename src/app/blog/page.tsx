@@ -77,13 +77,6 @@ const posts = [
     readTime: "3 min",
   },
   {
-    slug: "copilot-v-poznamkach",
-    title: "Copilot v Poznámkách M365 mě fakt překvapil. A ukázal mi, kam směřuje práce s informacemi.",
-    description: "Celý dokument jako kontext, okamžité editace, projekty místo izolovaných poznámek — a čtyři nápady, kam by to šlo posunout dál.",
-    date: "2026-06-30",
-    readTime: "4 min",
-  },
-  {
     slug: "obcas-je-dobry-mit-spatnej-napad",
     title: "Občas je dobrý mít špatnej nápad",
     description: "Nejdřív to pořádně promysli, říkali. A já jsem promyslel víc nápadů, než kolik jsem jich kdy zrealizoval. Tohle je o tom, proč špatný nápady jsou lepší než žádný.",
