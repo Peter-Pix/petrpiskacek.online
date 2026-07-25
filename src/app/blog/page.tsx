@@ -21,6 +21,13 @@ export const metadata: Metadata = {
 
 const posts = [
   {
+    slug: "prekvapeny-lektor",
+    title: "Překvapený lektor. Abstraktní teze. Exponenciální trapas.",
+    description: "Víte, jak poznáte, že AI dosáhla evolučního vrcholu? Přijde za vámi robot a bude tvrdit, že je nebinární.",
+    date: "2026-07-31",
+    readTime: "1 min",
+  },
+  {
     slug: "vyjimecni-obycejnaci",
     title: "Výjimeční obyčejňáci",
     description: "Nejde o to být nejchytřejší. Jde o to nebýt nejhloupější. A to je maximalistický minimalismus v praxi.",
