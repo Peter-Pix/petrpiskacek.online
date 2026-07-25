@@ -396,7 +396,7 @@ const posts: Record<string, { title: string; date: string; content: string[] }> 
 
   "ai-je-trochu-zenska": {
     title: "AI je trochu ženská",
-    date: "2026-07-25",
+    date: "2026-07-24",
     content: [
       "",
       "A myslím to jako kompliment.",

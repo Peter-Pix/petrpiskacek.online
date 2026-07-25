@@ -31,7 +31,7 @@ const posts = [
     slug: "ai-je-trochu-zenska",
     title: "AI je trochu ženská",
     description: "Nepředvídatelná, občas zaseknutá, a nejlepší řešení je někdy začít novej chat. Myslím to jako kompliment.",
-    date: "2026-07-25",
+    date: "2026-07-24",
     readTime: "2 min",
   },
   {
