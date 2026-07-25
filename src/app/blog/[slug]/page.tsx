@@ -394,8 +394,8 @@ const posts: Record<string, { title: string; date: string; content: string[] }> 
     ],
   },
 
-  "ai-je-trochu-sexy-holka": {
-    title: "AI je trochu sexy holka",
+  "ai-je-trochu-jako-sexy-holka": {
+    title: "AI je trochu jako sexy holka",
     date: "2026-07-24",
     content: [
       "",

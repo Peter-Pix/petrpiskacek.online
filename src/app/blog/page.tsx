@@ -28,8 +28,8 @@ const posts = [
     readTime: "4 min",
   },
   {
-    slug: "ai-je-trochu-sexy-holka",
-    title: "AI je trochu sexy holka",
+    slug: "ai-je-trochu-jako-sexy-holka",
+    title: "AI je trochu jako sexy holka",
     description: "Nepředvídatelná, občas zaseknutá, a nejlepší řešení je někdy začít novej chat. Myslím to jako kompliment.",
     date: "2026-07-24",
     readTime: "2 min",
