@@ -25,7 +25,7 @@ export default function Footer() {
               href="https://petrpiskacek.cloud"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs transition-colors hover:text-gold"
+              className="inline-flex items-center gap-1 text-xs transition-colors hover:text-gold hidden sm:inline-flex"
               style={{ color: "var(--text-muted)" }}
             >
               .cloud — AI playground
@@ -35,7 +35,7 @@ export default function Footer() {
               href="https://github.com/Peter-Pix"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs transition-colors"
+              className="inline-flex items-center gap-1 text-xs transition-colors hidden sm:inline-flex"
               style={{ color: "var(--text-muted)" }}
             >
               <GithubIcon size={14} />
@@ -43,7 +43,7 @@ export default function Footer() {
             </a>
             <a
               href="mailto:ppix50@gmail.com"
-              className="inline-flex items-center gap-1 text-xs transition-colors"
+              className="inline-flex items-center gap-1 text-xs transition-colors hidden sm:inline-flex"
               style={{ color: "var(--text-muted)" }}
             >
               <MailIcon size={14} />
