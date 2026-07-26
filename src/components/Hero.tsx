@@ -11,25 +11,22 @@ const LINES = [
 
 const TYPE_SPEED = 80;
 const PAUSE_AFTER_LINE = 2500;
-const BLINK_COUNT = 4;
-const BLINK_DURATION = 150;
-const BLINK_GAP = 150;
-const BLUR_FADE_DURATION = 1000;
+const BLUR_FADE_DURATION = 1200;
 const PAUSE_BEFORE_NEXT = 800;
+const CRT_UNFOLD_DURATION = 500;
 
 export default function Hero() {
   const textRef = useRef<HTMLDivElement>(null);
   const [text, setText] = useState("");
-  const [cursorVisible, setCursorVisible] = useState(true);
+  const [cursorVisible, setCursorVisible] = useState(false);
   const [fading, setFading] = useState(false);
+  const [crtUnfold, setCrtUnfold] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
-  // Refy — žádný state, žádný re-rendery
   const currentLineRef = useRef(0);
   const cancelledRef = useRef(false);
   const runningRef = useRef(false);
 
-  // Spuštění animace pro aktuální řádek
   const startTyping = useRef<() => void>(() => {});
 
   startTyping.current = () => {
@@ -44,51 +41,38 @@ export default function Hero() {
     }
 
     let pos = 0;
+    let unfolded = false;
 
-    // Fáze 1: Psaní
+    setCursorVisible(false);
+    setCrtUnfold(false);
+
     const typeChar = () => {
       if (cancelledRef.current) return;
       if (pos < line.length) {
         pos++;
         setText(line.slice(0, pos));
+        if (pos === 1) {
+          // První písmeno — spustíme CRT unfold + kurzor
+          setCrtUnfold(true);
+          setTimeout(() => setCursorVisible(true), 100);
+        }
         setTimeout(typeChar, TYPE_SPEED);
       } else {
-        // Fáze 2: Pauza
         setTimeout(() => {
           if (cancelledRef.current) return;
-          // Fáze 3: Blikání
-          let blinkCount = 0;
-          const doBlink = () => {
+          setFading(true);
+          setTimeout(() => {
             if (cancelledRef.current) return;
-            if (blinkCount >= BLINK_COUNT) {
-              // Fáze 4: Blur fade
-              setCursorVisible(false);
-              setFading(true);
-              setTimeout(() => {
-                if (cancelledRef.current) return;
-                setText("");
-                setFading(false);
-                // Fáze 5: Pauza před dalším
-                setTimeout(() => {
-                  if (cancelledRef.current) return;
-                  currentLineRef.current = (currentLineRef.current + 1) % LINES.length;
-                  setCursorVisible(true);
-                  runningRef.current = false;
-                  // Spustit další cyklus
-                  setTimeout(() => startTyping.current(), 50);
-                }, PAUSE_BEFORE_NEXT);
-              }, BLUR_FADE_DURATION);
-              return;
-            }
-            setCursorVisible(false);
+            setText("");
+            setFading(false);
+            setCrtUnfold(false);
             setTimeout(() => {
               if (cancelledRef.current) return;
-              setCursorVisible(true);
-              blinkCount++;
-              setTimeout(doBlink, BLINK_GAP);
-            }, BLINK_DURATION);
-          };
-          setTimeout(doBlink, 200);
+              currentLineRef.current = (currentLineRef.current + 1) % LINES.length;
+              runningRef.current = false;
+              setTimeout(() => startTyping.current(), 50);
+            }, PAUSE_BEFORE_NEXT);
+          }, BLUR_FADE_DURATION);
         }, PAUSE_AFTER_LINE);
       }
     };
@@ -96,7 +80,6 @@ export default function Hero() {
     setTimeout(typeChar, 100);
   };
 
-  // Start na mount
   useEffect(() => {
     setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     if (reducedMotion) {
@@ -110,7 +93,6 @@ export default function Hero() {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Kurzor blikání
   useEffect(() => {
     if (reducedMotion || fading || !text) return;
     const interval = setInterval(() => {
@@ -119,17 +101,15 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, [reducedMotion, fading, text]);
 
-  // Parallax scroll
   useEffect(() => {
     const el = textRef.current;
     if (!el) return;
     function handleScroll() {
       if (!el) return;
       const scrollY = window.scrollY;
-      const progress = Math.min(scrollY / window.innerHeight, 1);
       el.style.transform = `translateY(${-Math.min(scrollY * 0.15, 50)}px)`;
-      el.style.opacity = String(Math.max(1 - progress * 1.4, 0));
-      el.style.filter = `blur(${Math.min(progress * 12, 8)}px)`;
+      el.style.opacity = String(Math.max(1 - Math.min(scrollY / window.innerHeight, 1) * 1.4, 0));
+      el.style.filter = `blur(${Math.min((scrollY / window.innerHeight) * 12, 8)}px)`;
     }
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
@@ -143,13 +123,7 @@ export default function Hero() {
       <div className="hero-grid" aria-hidden="true" />
 
       <div className="container-narrow relative z-10">
-        <div
-          ref={textRef}
-          style={{
-            willChange: "transform, opacity, filter",
-            transition: "transform 0.1s linear, opacity 0.1s linear, filter 0.1s linear",
-          }}
-        >
+        <div ref={textRef} style={{ willChange: "transform, opacity, filter" }}>
           <p className="eyebrow mb-4 animate-fade-in-up" style={{ color: "var(--gold)" }}>
             Petr Piskáček
           </p>
@@ -158,28 +132,33 @@ export default function Hero() {
             <EchoTrigger sectionId="hero" />
           </div>
 
-          <div
-            className="relative mb-12 flex items-center justify-center sm:mb-16"
-            style={{ minHeight: "6rem" }}
-          >
-            <h1
-              className="headline-xl text-center"
+          <div className="relative mb-12 flex items-center justify-center sm:mb-16" style={{ minHeight: "6rem" }}>
+            <div
+              className="overflow-hidden"
               style={{
-                filter: fading ? "blur(8px)" : "blur(0px)",
-                opacity: fading ? 0 : 1,
-                transition: `filter ${BLUR_FADE_DURATION}ms ease-out, opacity ${BLUR_FADE_DURATION}ms ease-out`,
+                height: crtUnfold ? "auto" : "2px",
+                opacity: crtUnfold ? 1 : 0,
+                transition: `height ${CRT_UNFOLD_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1), opacity ${CRT_UNFOLD_DURATION}ms ease-out`,
               }}
             >
-              {text}
-              {text && !fading && (
+              <h1
+                className="headline-xl text-center"
+                style={{
+                  filter: fading ? "blur(8px)" : "blur(0px)",
+                  opacity: fading ? 0 : 1,
+                  transition: `filter ${BLUR_FADE_DURATION}ms ease-out, opacity ${BLUR_FADE_DURATION}ms ease-out`,
+                }}
+              >
+                {text}
                 <span
-                  className={`inline-block w-[3px] h-[0.8em] ml-1 align-middle transition-opacity duration-100 ${
-                    cursorVisible ? "opacity-100" : "opacity-0"
-                  }`}
-                  style={{ backgroundColor: "var(--gold)" }}
+                  className="inline-block w-[3px] h-[0.8em] ml-1 align-middle transition-all duration-200"
+                  style={{
+                    backgroundColor: "var(--gold)",
+                    opacity: !fading && cursorVisible ? 1 : 0,
+                  }}
                 />
-              )}
-            </h1>
+              </h1>
+            </div>
           </div>
 
           <div

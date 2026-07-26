@@ -1,8 +1,10 @@
 "use client";
 
 import { EchoTrigger } from "./ChatBot";
+import { useReveal } from "@/lib/use-reveal";
 
 export default function Beliefs() {
+  const { ref: sectionRef, style: sectionStyle } = useReveal({ threshold: 0.1 });
   const beliefs = [
     {
       title: "Ani zlý, ani hodný.",
@@ -31,7 +33,7 @@ export default function Beliefs() {
         </div>
         <h2 className="headline-lg mb-8">V co věřím</h2>
 
-        <div className="space-y-8">
+        <div ref={sectionRef} style={sectionStyle} className="space-y-8">
           {beliefs.map((belief, i) => (
             <div key={i} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
               <h3 className="mb-2 text-lg font-semibold">{belief.title}</h3>

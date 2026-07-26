@@ -2,8 +2,13 @@
 
 import { QuoteIcon } from "./icons";
 import { EchoTrigger } from "./ChatBot";
+import { useReveal } from "@/lib/use-reveal";
 
 export default function Story() {
+  const { ref: sectionRef, style: sectionStyle } = useReveal({ threshold: 0.1 });
+  const { ref: quoteRef, style: quoteStyle } = useReveal({ delay: 200, animation: "scale-in" });
+  const { ref: ctaRef, style: ctaStyle } = useReveal({ delay: 400 });
+
   return (
     <section data-context-section="story" id="pribeh" className="section-apple">
       <div className="container-read">
@@ -13,7 +18,7 @@ export default function Story() {
         </div>
         <h2 className="headline-lg mb-8">Lidi se ptají proč to dělám.</h2>
 
-        <div className="longform">
+        <div ref={sectionRef} style={sectionStyle} className="longform">
           <p>
             Počítače mě pohltily už jako malýho kluka. Bavilo mě programovat, protože z ničeho se mohl udělat něco. Člověk nepotřeboval cihly, nepotřeboval peníze, dokonce ani míč nebo hokejku. Potřeboval jenom <strong>myšlenku</strong>. A to mě prostě zaujalo.
           </p>
@@ -31,8 +36,8 @@ export default function Story() {
           </p>
         </div>
 
-        {/* Pull quote — Apple styl, bílý uvozovky, průhledný */}
-        <div className="my-12">
+        {/* Pull quote */}
+        <div ref={quoteRef} style={quoteStyle} className="my-12">
           <div className="flex gap-4 md:gap-6">
             <div className="flex-shrink-0" style={{ color: 'var(--text-secondary)' }}>
               <QuoteIcon size={48} />
@@ -45,8 +50,8 @@ export default function Story() {
           </div>
         </div>
 
-        {/* CTA — propojení s cloudem */}
-        <div className="mt-8 flex flex-col items-center gap-3 text-center">
+        {/* CTA */}
+        <div ref={ctaRef} style={ctaStyle} className="mt-8 flex flex-col items-center gap-3 text-center">
           <a
             href="https://petrpiskacek.cloud"
             target="_blank"

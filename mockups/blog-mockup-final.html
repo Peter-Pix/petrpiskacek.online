@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog detail — Apple-style</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --gold: #c8962e;
+    --gold-light: #e4b44a;
+    --bg: #09090b;
+    --surface: rgba(255, 255, 255, 0.04);
+    --surface-strong: rgba(9, 9, 11, 0.88);
+    --border: rgba(255, 255, 255, 0.06);
+    --text: #f4f4f5;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+  }
+  
+  body { 
+    background: var(--bg); 
+    color: var(--text); 
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Nav */
+  .nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    height: 3.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    background: var(--surface-strong);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+  
+  .nav-link {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-link:hover { color: var(--text); }
+  .nav-link.active { color: var(--gold); }
+  
+  .nav-logo {
+    color: var(--text);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+  }
+  
+  /* Article container */
+  .container { 
+    max-width: 680px; 
+    margin: 0 auto; 
+    padding: 7rem 1.5rem 6rem;
+  }
+  
+  /* Back link */
+  .back { 
+    color: var(--text-muted); 
+    font-size: 0.875rem; 
+    text-decoration: none; 
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 2.5rem; 
+    transition: color 0.2s;
+  }
+  .back:hover { color: var(--gold); }
+  
+  /* Header */
+  h1 { 
+    font-size: 2.5rem; 
+    font-weight: 700; 
+    letter-spacing: -0.025em; 
+    line-height: 1.1; 
+    margin-bottom: 0.75rem; 
+    color: var(--text); 
+  }
+  
+  .meta { 
+    color: var(--text-muted); 
+    font-size: 0.875rem; 
+    margin-bottom: 3rem; 
+  }
+  
+  /* Body text */
+  p { 
+    margin-bottom: 1.5rem; 
+    color: var(--text-secondary); 
+    font-size: 1.0625rem; 
+    line-height: 1.75;
+  }
+  
+  /* Divider */
+  hr { 
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 3rem 0; 
+  }
+  
+  /* Bold lead sentence */
+  .lead { 
+    font-size: 1.1875rem; 
+    font-weight: 600; 
+    color: var(--text); 
+    margin-bottom: 1.5rem; 
+    line-height: 1.5;
+  }
+  
+  /* Blockquote — gold accent */
+  blockquote {
+    border-left: 2px solid var(--gold);
+    padding: 0.5rem 0 0.5rem 1.5rem;
+    margin: 2rem 0;
+    color: var(--text);
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    font-style: italic;
+  }
+  
+  /* Inline code */
+  code { 
+    background: var(--surface); 
+    padding: 0.125rem 0.5rem; 
+    border-radius: 4px; 
+    font-size: 0.9375rem; 
+    color: var(--gold); 
+    font-family: "SF Mono", "SFMono-Regular", Menlo, Monaco, Consolas, monospace; 
+  }
+  
+  /* List */
+  ul, ol { margin: 1.5rem 0 1.5rem 1.5rem; color: var(--text-secondary); font-size: 1.0625rem; line-height: 1.75; }
+  li { margin-bottom: 0.5rem; }
+  
+  /* Image */
+  .img {
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 2.5rem 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .img-placeholder {
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+  
+  /* Selection */
+  ::selection { background-color: rgba(200, 150, 46, 0.35); color: #fff; }
+  
+  /* Mobile */
+  @media (max-width: 640px) {
+    .container { padding: 6rem 1.25rem 4rem; }
+    h1 { font-size: 2rem; }
+    p { font-size: 1rem; }
+    .nav { padding: 0 1rem; }
+    .nav-links { gap: 1rem; }
+  }
+</style>
+</head>
+<body>
+  <!-- Nav -->
+  <nav class="nav">
+    <a href="#" class="nav-logo">Petr Piskacek</a>
+    <div class="nav-links">
+      <a href="#" class="nav-link">Práce</a>
+      <a href="#" class="nav-link active">Blog</a>
+      <a href="#" class="nav-link">Kontakt</a>
+    </div>
+  </nav>
+  
+  <!-- Article -->
+  <div class="container">
+    <a href="#" class="back">← Blog</a>
+    
+    <h1>Labutí jezero bez labutí a bez jezera</h1>
+    <div class="meta">26. července 2026</div>
+    
+    <p>Není to o skillu. Je to o propustnosti.</p>
+    
+    <p>Skill je sexy. Propustnost není. Fůůj. Blééé. Nikdo ji neobdivuje. A přesto je důležitější. Bez ní by netekla voda. Záchod by nesplachoval. Všimli bychom si rychle.</p>
+    
+    <hr>
+    
+    <p>Sto úderů za vteřinu. Tři instance najednou. Každá si může zavolat kamarády.</p>
+    
+    <p>Představte si to jako filharmonii. Ne sólistu, kterej na pódiu hraje čtyři tóny na první flétnu. Ale osmdesát lidí, co jsou v tom, co dělají, zatraceně dobří. Každej svůj part, každej ve správnou chvíli. A dohromady z toho vznikne něco, co žádnej z nich sám nezahraje.</p>
+    
+    <p>A jo — občas přijde slon na míči a žongluje s mikroprocesorama. Protože se nudí a flexí. Ani by to nemusel. Ale umí. A to stačí.</p>
+    
+    <p class="lead">To je balet. Labutí jezero. Jen bez labutí a bez jezera.</p>
+    
+    <hr>
+    
+    <p>Problém s talentem je linearita.</p>
+    
+    <p>Jeden člověk. Jeden úkol. Jeden výsledek. Pak další. Pak další. Fronta. Bottleneck. Strop.</p>
+    
+    <p>Strop je fajn. Dokud nemíříte výš.</p>
+    
+    <p>AI orchestrace ten strop boří. Ne tím, že by dělala jednu věc líp. Ale tím, že jich dělá sto zároveň. Ani kdyby měl ten sólista Chuck Norris skill a plíce velký jak celá Alabama — filharmonii nehraje sám.</p>
+    
+    <p>Představte si tohle. Chcete si poslechnout Čtvero ročních období. Mávnete na orchestr, oni hrají — a za chvilku hotovo. A teď si představte, že umí hrát cokoliv. Webovou stránku. Daně. Pošlou papíry na finančák. Vyklikají, co se dá vyklikat.</p>
+    
+    <p>Nedělají to jako člověk. A to je celá pointa.</p>
+    
+    <hr>
+    
+    <p>Já neříkám, používejte tohle. Já říkám — za mě dobrý.</p>
+    
+    <p>Nementoruju. Neprodávám. Jen říkám, že to funguje.</p>
+    
+    <blockquote>Skill je sexy. Propustnost je ninja.</blockquote>
+  </div>
+</body>
+</html>

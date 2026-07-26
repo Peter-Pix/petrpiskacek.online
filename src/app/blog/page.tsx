@@ -21,6 +21,34 @@ export const metadata: Metadata = {
 
 const posts = [
   {
+    slug: "labuti-jezero",
+    title: "Labutí jezero bez labutí a bez jezera",
+    description: "Není to o skillu. Je to o propustnosti. Sto úderů za vteřinu, tři instance najednou a slon na míči, kterej žongluje s mikroprocesorama.",
+    date: "2026-07-26",
+    readTime: "3 min",
+  },
+  {
+    slug: "legendario",
+    title: "Legendário",
+    description: "Zlí holubi se vracejí. Vždy. Bez výjimky. O světě, kde 'docela dobrý' je na potlesk — a proč byste měli být v příštím životě holub.",
+    date: "2026-07-26",
+    readTime: "2 min",
+  },
+  {
+    slug: "rozkosne-nedokonalosti",
+    title: "Rozkošné nedokonalosti",
+    description: "I na půjčeným kole se dá dobře projet. O chaosu, autenticitě a tom, proč jsou nedokonalosti to jediný, co si lidi pamatujou.",
+    date: "2026-07-26",
+    readTime: "3 min",
+  },
+  {
+    slug: "zavri-hubu-nebo-otevru-terminal",
+    title: "Zavři hubu nebo otevřu terminál!",
+    description: "Čím víc někdo o AI skutečně ví, tím míň má potřebu se k tomu vyjadřovat. Potkal jsem člověka, kterej mi na akci vysvětloval, že LLM jsou jen papoušci. Nikdy s API nepracoval.",
+    date: "2026-07-26",
+    readTime: "3 min",
+  },
+  {
     slug: "prekvapeny-lektor",
     title: "Překvapený lektor. Abstraktní teze. Exponenciální trapas.",
     description: "Víte, jak poznáte, že AI dosáhla evolučního vrcholu? Přijde za vámi robot a bude tvrdit, že je nebinární.",

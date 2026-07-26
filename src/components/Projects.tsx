@@ -2,6 +2,7 @@
 
 import { ExternalLinkIcon } from "./icons";
 import { EchoTrigger } from "./ChatBot";
+import { useReveal } from "@/lib/use-reveal";
 
 const projects = [
   {
@@ -52,6 +53,7 @@ const projects = [
 ];
 
 export default function Projects() {
+  const { ref: sectionRef, style: sectionStyle } = useReveal({ threshold: 0.1 });
   return (
     <section data-context-section="projects" id="projekty" className="section-apple">
       <div className="container-read">
@@ -64,7 +66,7 @@ export default function Projects() {
           Každej projekt má svůj příběh. Tady je vysvětlenej lidsky — ne technicky.
         </p>
 
-        <div className="space-y-8">
+        <div ref={sectionRef} style={sectionStyle} className="space-y-8">
           {projects.map((project, i) => (
             <div
               key={project.id}

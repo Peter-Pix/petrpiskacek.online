@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { EchoTrigger } from "./ChatBot";
+import { useReveal } from "@/lib/use-reveal";
 
 interface Phase {
   period: string;
@@ -45,6 +46,7 @@ const phases: Phase[] = [
 export default function Timeline() {
   const [activeIndex, setActiveIndex] = useState(0);
   const phaseRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const { ref: sectionRef, style: sectionStyle } = useReveal({ threshold: 0.1 });
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -78,7 +80,7 @@ export default function Timeline() {
           Čas od času víc šetřit čas.
         </p>
 
-        <div className="relative mx-auto max-w-3xl">
+        <div ref={sectionRef} style={sectionStyle} className="relative mx-auto max-w-3xl">
           {/* Vertikální čára */}
           <div
             className="absolute left-3 top-2 bottom-2 w-px md:left-1/2 md:-translate-x-1/2"
