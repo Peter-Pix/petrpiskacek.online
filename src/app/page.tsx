@@ -6,7 +6,6 @@ import BlogHighlights from "@/components/BlogHighlights";
 import Timeline from "@/components/Timeline";
 import Projects from "@/components/Projects";
 import Contact from "@/components/Contact";
-import Footer from "@/components/Footer";
 import ChatBot from "@/components/ChatBot";
 import JsonLd from "@/components/JsonLd";
 import { EchoProvider } from "@/lib/echo-context";
@@ -24,7 +23,6 @@ export default function Home() {
         <Timeline />
         <Projects />
         <Contact />
-        <Footer />
         <ChatBot />
       </main>
     </EchoProvider>
