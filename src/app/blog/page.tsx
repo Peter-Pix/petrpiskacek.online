@@ -120,6 +120,8 @@ const posts = [
   },
 ];
 
+const totalMinutes = posts.reduce((sum, p) => sum + parseInt(p.readTime), 0);
+
 export default function BlogPage() {
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -129,6 +131,7 @@ export default function BlogPage() {
         </Link>
         <h1 className="mt-8 text-3xl font-bold tracking-tight">Blog</h1>
         <p className="mt-2 text-zinc-400">Myšlenky o AI, programování, životě a všem mezi tím.</p>
+        <p className="mt-1 text-xs text-zinc-600">{totalMinutes} minut myšlenek</p>
 
         <div className="mt-12 space-y-8">
           {posts.map((post) => (
