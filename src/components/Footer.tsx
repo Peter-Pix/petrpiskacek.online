@@ -15,39 +15,37 @@ export default function Footer() {
               href="https://petrpiskacek.cz"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs transition-colors hover:text-gold hidden sm:inline-flex"
+              className="inline-flex items-center gap-1 text-xs transition-colors hover:text-gold"
               style={{ color: "var(--text-muted)" }}
             >
-              .cz — kdo jsem
+              .cz
               <ExternalLinkIcon size={10} />
             </a>
             <a
               href="https://petrpiskacek.cloud"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs transition-colors hover:text-gold hidden sm:inline-flex"
+              className="inline-flex items-center gap-1 text-xs transition-colors hover:text-gold"
               style={{ color: "var(--text-muted)" }}
             >
-              .cloud — AI playground
+              .cloud
               <ExternalLinkIcon size={10} />
             </a>
             <a
               href="https://github.com/Peter-Pix"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs transition-colors hidden sm:inline-flex"
+              className="inline-flex items-center gap-1 text-xs transition-colors"
               style={{ color: "var(--text-muted)" }}
             >
               <GithubIcon size={14} />
-              GitHub
             </a>
             <a
               href="mailto:ppix50@gmail.com"
-              className="inline-flex items-center gap-1 text-xs transition-colors hidden sm:inline-flex"
+              className="inline-flex items-center gap-1 text-xs transition-colors"
               style={{ color: "var(--text-muted)" }}
             >
               <MailIcon size={14} />
-              Email
             </a>
           </div>
         </div>
