@@ -15,7 +15,7 @@ export default function Footer() {
               href="https://petrpiskacek.cz"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs transition-colors hover:text-gold"
+              className="inline-flex items-center gap-1 text-xs transition-colors hover:text-gold hidden sm:inline-flex"
               style={{ color: "var(--text-muted)" }}
             >
               .cz — kdo jsem
