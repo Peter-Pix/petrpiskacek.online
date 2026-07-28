@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Footer from "@/components/Footer";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 const defaultUrl = "https://petrpiskacek.online";
 
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="cs" className="scroll-smooth" suppressHydrationWarning>
       <body className="min-h-screen bg-zinc-950 text-zinc-100 antialiased selection:bg-gold/30 selection:text-white">
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
         {children}
         <Footer />
       </body>
