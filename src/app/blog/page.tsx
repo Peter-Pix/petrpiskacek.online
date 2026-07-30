@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import fs from "fs";
+import path from "path";
 
 export const metadata: Metadata = {
   title: "Blog — Petr Piskacek",
@@ -19,107 +21,47 @@ export const metadata: Metadata = {
   },
 };
 
-const posts = [
-  {
-    slug: "prekvapeny-lektor",
-    title: "Překvapený lektor. Abstraktní teze. Exponenciální trapas.",
-    description: "Víte, jak poznáte, že AI dosáhla evolučního vrcholu? Přijde za vámi robot a bude tvrdit, že je nebinární.",
-    date: "2026-07-30",
-    readTime: "1 min",
-  },
-  {
-    slug: "labuti-jezero",
-    title: "Labutí jezero bez labutí a bez jezera",
-    description: "Není to o skillu. Je to o propustnosti. Sto úderů za vteřinu, tři instance najednou a slon na míči, kterej žongluje s mikroprocesorama.",
-    date: "2026-07-24",
-    readTime: "3 min",
-  },
-  {
-    slug: "legendario",
-    title: "Legendário",
-    description: "Zlí holubi se vracejí. Vždy. Bez výjimky. O světě, kde 'docela dobrý' je na potlesk — a proč byste měli být v příštím životě holub.",
-    date: "2026-07-20",
-    readTime: "2 min",
-  },
-  {
-    slug: "rozkosne-nedokonalosti",
-    title: "Rozkošné nedokonalosti",
-    description: "I na půjčeným kole se dá dobře projet. O chaosu, autenticitě a tom, proč jsou nedokonalosti to jediný, co si lidi pamatujou.",
-    date: "2026-07-14",
-    readTime: "3 min",
-  },
-  {
-    slug: "zavri-hubu-nebo-otevru-terminal",
-    title: "Zavři hubu nebo otevřu terminál!",
-    description: "Čím víc někdo o AI skutečně ví, tím míň má potřebu se k tomu vyjadřovat. Potkal jsem člověka, kterej mi na akci vysvětloval, že LLM jsou jen papoušci. Nikdy s API nepracoval.",
-    date: "2026-07-09",
-    readTime: "3 min",
-  },
-  {
-    slug: "vyjimecni-obycejnaci",
-    title: "Výjimeční obyčejňáci",
-    description: "Nejde o to být nejchytřejší. Jde o to nebýt nejhloupější. A to je maximalistický minimalismus v praxi.",
-    date: "2026-07-03",
-    readTime: "4 min",
-  },
-  {
-    slug: "ai-je-trochu-jako-sexy-holka",
-    title: "AI je trochu jako sexy holka",
-    description: "Nepředvídatelná, občas zaseknutá, a nejlepší řešení je někdy začít novej chat. Myslím to jako kompliment.",
-    date: "2026-06-27",
-    readTime: "2 min",
-  },
-  {
-    slug: "proc-nas-to-stve",
-    title: "Umělá inteligence. Proč nás to vlastně štve?",
-    description: "Umělý kozy — v pohodě. Umělý květiny — jasný. Umělá inteligence — problém. Není to náhodou tím druhým slovem?",
-    date: "2026-06-21",
-    readTime: "2 min",
-  },
-  {
-    slug: "ai-neni-prirozena",
-    title: "AI není přirozená. A právě proto je tak užitečná.",
-    description: "Stejně jako auto není přirozený, letadlo není přirozený a elektřina není přirozená. Přesto je používáme. Proč by AI měla být výjimka?",
-    date: "2026-06-14",
-    readTime: "4 min",
-  },
-  {
-    slug: "parak-kterej-nezavidi",
-    title: "Parťák, kterej nezávidí",
-    description: "Představ si kolegu, co nemá ego. Nezávidí, neurazí se, nepotřebuje kafe. Zní to jako sci-fi? Není.",
-    date: "2026-06-08",
-    readTime: "3 min",
-  },
-  {
-    slug: "bojime-se-toho-co-nechapeme",
-    title: "Bojíme se toho, co nechápeme. A to je vlastně v pohodě.",
-    description: "Bál jsem se, že zlenivím. Že přestanu přemýšlet. Že se stanu tím týpkem, co jen zadává prompt. A víš co? Měl jsem pravdu. Chvíli.",
-    date: "2026-06-01",
-    readTime: "4 min",
-  },
-  {
-    slug: "mluvime-s-kladivem",
-    title: "Mluvíme s kladivem a divíme se, že nerozumí",
-    description: "Řekl jsem AI: 'Udělej to hezčí.' A ona to udělala hezčí. Jenže já myslel funkčnější. Ona myslela vizuálně. Výsledek byl krásnej. A úplně k ničemu.",
-    date: "2026-05-24",
-    readTime: "3 min",
-  },
-  {
-    slug: "obcas-je-dobry-mit-spatnej-napad",
-    title: "Občas je dobrý mít špatnej nápad",
-    description: "Nejdřív to pořádně promysli, říkali. A já jsem promyslel víc nápadů, než kolik jich kdy zrealizoval. Tohle je o tom, proč špatný nápady jsou lepší než žádný.",
-    date: "2026-05-16",
-    readTime: "5 min",
-  },
-  {
-    slug: "nenadavam-protoze-me-to-bavi",
-    title: "Nenadávám, protože mě to baví. Dělám to, protože to funguje.",
-    description: "Proč nevybíravý jazyk u AI prokazatelně boduje — a proč to není o vulgárnosti.",
-    date: "2026-05-09",
-    readTime: "3 min",
-  },
-];
+interface PostMeta {
+  slug: string;
+  title: string;
+  date: string;
+  description: string;
+  readTime: string;
+}
 
+function getAllPosts(): PostMeta[] {
+  const postsDir = path.join(process.cwd(), "src/app/blog/posts");
+  const files = fs.readdirSync(postsDir).filter((f) => f.endsWith(".mdx"));
+
+  const posts: PostMeta[] = files.map((file) => {
+    const slug = file.replace(/\.mdx$/, "");
+    const content = fs.readFileSync(path.join(postsDir, file), "utf-8");
+    const frontmatter: Record<string, string> = {};
+    const match = content.match(/^---\n([\s\S]*?)\n---/);
+    if (match) {
+      const lines = match[1].split("\n");
+      for (const line of lines) {
+        const sep = line.indexOf(": ");
+        if (sep > 0) {
+          const key = line.slice(0, sep).trim();
+          const val = line.slice(sep + 2).trim().replace(/^"(.*)"$/, "$1");
+          frontmatter[key] = val;
+        }
+      }
+    }
+    return {
+      slug,
+      title: frontmatter.title || slug,
+      date: frontmatter.date || "2000-01-01",
+      description: frontmatter.description || "",
+      readTime: frontmatter.readTime || "1 min",
+    };
+  });
+
+  return posts.sort((a, b) => b.date.localeCompare(a.date));
+}
+
+const posts = getAllPosts();
 const totalMinutes = posts.reduce((sum, p) => sum + parseInt(p.readTime), 0);
 
 export default function BlogPage() {
