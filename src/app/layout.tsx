@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Footer from "@/components/Footer";
+import { Footer } from "@piskacek/ui";
 import { GoogleAnalytics } from "@next/third-parties/google";
 
 const defaultUrl = "https://petrpiskacek.online";
