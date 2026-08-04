@@ -29,7 +29,12 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Petr Piskáček" }],
   icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    icon: [
+      { url: "/favicon-32.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon-48.png", type: "image/png", sizes: "48x48" },
+      { url: "/favicon-64.png", type: "image/png", sizes: "64x64" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
   openGraph: {
     title: "Petr Piskáček — příběh, vize, proč to dělám",
