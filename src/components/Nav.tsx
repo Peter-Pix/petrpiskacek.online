@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { MenuIcon, CloseIcon } from "./icons";
-import SiteSwitcher from "./SiteSwitcher";
+import { SiteSwitcher } from "@piskacek/ui";
 
 const links = [
   { href: "/", label: "Domů" },
