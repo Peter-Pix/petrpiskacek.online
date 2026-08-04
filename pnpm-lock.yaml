@@ -20,9 +20,6 @@ importers:
       '@next/third-parties':
         specifier: ^16.2.12
         version: 16.2.12(next@16.2.10(@babel/core@7.29.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
-      '@piskacek/ui':
-        specifier: link:/Users/petrpiskacek/projects/ecosystem-dashboard/packages/ui
-        version: link:../ecosystem-dashboard/packages/ui
       '@types/mdx':
         specifier: ^2.0.14
         version: 2.0.14

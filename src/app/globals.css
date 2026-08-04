@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "@piskacek/ui/glass.css";
+@import "../vendor/ui/glass.css";
 
 @theme {
   --color-gold: #c8962e;

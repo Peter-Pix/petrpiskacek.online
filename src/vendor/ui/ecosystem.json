@@ -1,0 +1,22 @@
+{
+  "author": "Petr Piskáček",
+  "github": "https://github.com/Peter-Pix",
+  "email": "ppix50@gmail.com",
+  "sites": {
+    "cz": {
+      "url": "https://petrpiskacek.cz",
+      "label": "petrpiskacek.cz",
+      "desc": "Portfolio"
+    },
+    "online": {
+      "url": "https://petrpiskacek.online",
+      "label": "petrpiskacek.online",
+      "desc": "Příběh"
+    },
+    "cloud": {
+      "url": "https://petrpiskacek.cloud",
+      "label": "petrpiskacek.cloud",
+      "desc": "AI Playground"
+    }
+  }
+}

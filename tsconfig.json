@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@piskacek/ui": ["./src/vendor/ui/dist/index.js"]
     }
   },
   "include": [
