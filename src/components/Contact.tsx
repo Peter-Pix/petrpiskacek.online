@@ -2,6 +2,7 @@
 
 import { MailIcon } from "./icons";
 import { useReveal } from "@/lib/use-reveal";
+import { trackEvent } from "@/lib/track";
 
 export default function Contact() {
   const { ref, style } = useReveal({ threshold: 0.2 });
@@ -16,6 +17,7 @@ export default function Contact() {
         </p>
         <a
           href="mailto:ppix50@gmail.com"
+          onClick={() => trackEvent("click_contact")}
           className="btn-apple btn-apple-primary inline-flex items-center gap-2"
         >
           <MailIcon size={18} />

@@ -3,6 +3,7 @@
 import { ExternalLinkIcon } from "./icons";
 import { EchoTrigger } from "./ChatBot";
 import { useReveal } from "@/lib/use-reveal";
+import { trackEvent } from "@/lib/track";
 
 const projects = [
   {
@@ -94,6 +95,9 @@ export default function Projects() {
                 href={project.link}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() =>
+                  trackEvent("click_project", { project: project.id, name: project.name })
+                }
                 className="block overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--card-shadow)] transition-all duration-500 hover:border-gold"
               >
                 <img
@@ -113,6 +117,9 @@ export default function Projects() {
                         href={project.link}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() =>
+                          trackEvent("click_project", { project: project.id, name: project.name })
+                        }
                         className="inline-flex items-center gap-2 hover:text-gold transition-colors"
                       >
                         {project.name}
