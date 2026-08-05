@@ -6,49 +6,64 @@ import { useReveal } from "@/lib/use-reveal";
 
 const projects = [
   {
-    id: "vocalbrain",
-    name: "VocalBrain",
+    id: "karel",
+    name: "Karel Robot",
+    shot: "/screenshots/karel.jpg",
     description:
-      "Projekt založenej na audio transkripci. Člověk prostě zapne nahrávání a mluví o projektu. O něčem, co chce dělat. Nebo prostě jenom o plánech na víkend. Všechny myšlenky se přepíšou, strukturalizujou, vytáhnou se hlavní body, udělají se to-do listy, celej projekt se naplánuje — a to jenom z našeho brainstormingu.",
+      "AI e-mailovej administrátor. Pošleš mu e-mail a on ho analyzuje, roztřídí a napíše odpověď. Rozpozná urgentní zprávy, faktury, newslettery a osobní poštu.",
     detail:
-      "Když přijdeme další den a začneme zase o projektu mluvit, systém automaticky pozná, že se jedná o ten týž projekt a přidá nové informace k již rozpracovanému. Takhle můžeme každý den pouze pomocí brainstormingu dopracovat projekty až ke kompletnímu návrhu.",
-    link: null,
+      "Přesně ten typ práce, kterou nikdo nechce dělat — ale někdo musí. A Karel se nikdy neunaví, nevyhoří a neřekne 'to není moje náplň'. Postavil jsem ho, protože mě štvalo trávit hodiny nad mailama, který se daj zvládnout za vteřinu.",
+    link: "https://karel.petrpiskacek.cloud",
   },
   {
-    id: "stylemorph",
-    name: "StyleMorph",
+    id: "sparring",
+    name: "Sparring",
+    shot: "/screenshots/sparring.jpg",
     description:
-      "Nástroj, kterej ze starých webů, který nevypadaj zrovna nejmoderněji, udělá moderně vypadající weby během chviličky. Stačí mu říct, jakej se mi líbí styl, a on v reálným čase předělá stránky, který si můžeme hned stáhnout.",
+      "AI konzultant na projekty. Napíšeš nápad, on se doptá na detaily, pak ti nacení, navrhne stack a časovej plán. Čtyři bloky: jádro, stack, náklady, postup.",
     detail:
-      "Ušetří to hodiny, dny, možná týdny, a malým firmám spoustu nákladů. Tento projekt mě zajímá kvůli své relativní jednoduchosti a fascinující efektivitě.",
-    link: null,
+      "Vznikl z frustrace z prázdný stránky. Nápad je pocit, ne plán — a Sparring tě z toho pocitu dostane na konkrétní návrh za pár vteřin. Je to jako mít na pohovce AI mentora, kterej tě nenechá mlžit.",
+    link: "https://petrpiskacek.cloud/challenge",
   },
   {
-    id: "autoblog",
-    name: "AutoBlog Publisher",
+    id: "flash-ui",
+    name: "Flash UI",
+    shot: "/screenshots/flash-ui.jpg",
     description:
-      "Projekt, kterej jsem už dlouhá léta chtěl zkusit, ale až teď jsem k tomu měl dostatečnou technologickou základnu. Zvolíme téma a AI dohledá, co lidi aktuálně zajímá, podle toho, co hledaj na Google. Na to téma vyhledá informace, zpracuje články, ty po sobě zkontroluje, vylepší je a samo je nasdílí online.",
+      "Generuje UI komponenty z promptu. Napiš, co chceš, a DeepSeek V4 Flash to nakreslí v reálným čase. Tlačítka, formuláře, karty, dashboardy — cokoliv.",
     detail:
-      "Celej web se generuje a buduje sám. Zároveň analyzuje, co už na něm je, aby se to rozvíjelo všemi směry konzistentně. Systém, kterej dokáže vybudovat, spravovat a rozšiřovat webové stránky bez jakéhokoliv zásahu člověka.",
-    link: null,
-  },
-  {
-    id: "scrollo",
-    name: "Scrollo.cz",
-    description:
-      "Tohle je takovej můj side projekt, kterej vznikl, protože mě štvalo, když všechny jednoduchý nástroje na internetu maj spoustu vyskakovacích oken, reklam, a i přesto, když se tím člověk prokliká, polovina z nich nefunguje.",
-    detail:
-      'Jednoho dne jsem se naštval a začal jsem pracovat na tomhle projektu. Jsou tam nástroje, který sám používám, a každej jeden z nich vzniknul právě proto, že jsem ho potřeboval. Všechny fungujou, jsou plně privátní — neukládaj žádná data do databází, všechno je ve vašem prohlížeči — a hlavně jsou úplně bez reklam a zcela zdarma.',
-    link: "https://scrollo.cz",
+      "Design pro váš web. Přidejte nový formulář, chat, ceník. Cokoliv jen chcete. Ušetří to hodiny práce — a hlavně to ukazuje, že design už není o tom, umět klikat ve Figmě, ale vědět, co chceš.",
+    link: "https://petrpiskacek.cloud/flash-ui",
   },
   {
     id: "4rap",
     name: "4RAP.CZ",
+    shot: "/screenshots/4rap.jpg",
     description:
-      "Tento projekt začal několik let zpátky, když jsem se začal víc zajímat o rapovou produkci a rap samotnej. Došlo mi, že česká scéna nemá žádnej centralizovanej web, kde by se člověk dozvěděl, kdo je kdo, kdo s kým spolupracoval, co vydal, odkud je.",
+      "Vědomostní graf české rapové scény. Kdo s kým, kdo kde, co kdy vyšlo. Chaos dostal řád. Přesvědčte se sami.",
     detail:
-      "Projekt shromažďuje ověřený informace a ukazuje propojení jednotlivých interpretů, alb, měst, žánrů. Dneska má 1200+ entit a skoro 6000 vazeb. A jo, je to k ničemu — pokud zrovna nechceš vědět, kdo produkoval beat na desku, kterou nikdo neposlouchal. Ale právě v tom je ta krása.",
+      "Projekt shromažďuje ověřený informace a ukazuje propojení interpretů, alb, měst, žánrů. Dneska má 1200+ entit a skoro 6000 vazeb. A jo, je to k ničemu — pokud zrovna nechceš vědět, kdo produkoval beat na desku, kterou nikdo neposlouchal. Ale právě v tom je ta krása.",
     link: "https://4rap.cz",
+  },
+  {
+    id: "docbot",
+    name: "DocBot",
+    shot: "/screenshots/docbot.jpg",
+    description:
+      "AI právník na český smlouvy. Postaví ti NDA, nájemní nebo pracovní smlouvu podle českého práva. Chatem tě provede krok za krokem, pak to zkontroluje na rizika.",
+    detail:
+      "Žádné ruční vyplňování. Smlouvy snadno a rychle. Dělejte to jednoduše. Postavil jsem ho, protože právníci jsou drahý a šablony z internetu jsou past — tohle je kompromis, kterej ti nezlomí banku ani nervy.",
+    link: "https://docbot.petrpiskacek.cloud",
+  },
+  {
+    id: "terminall",
+    name: "Terminall",
+    shot: "/screenshots/terminall.jpg",
+    description:
+      "Trénink příkazovýho řádku. Uč se Linux, macOS a Windows příkazy v bezpečným virtuálním terminálu. Dělej chyby a AI učitel ti je vysvětlí.",
+    detail:
+      "Naučte se terminál jinak. Učitel opravuje chyby a napovídá. Lekce s příběhem. Vznikl, protože nejlepší způsob, jak se naučit terminál, je v něm chybovat — ale v bezpečí. Tady je to povolený a ještě z toho něco máš.",
+    link: "https://terminall.petrpiskacek.cloud",
   },
 ];
 
@@ -56,7 +71,7 @@ export default function Projects() {
   const { ref: sectionRef, style: sectionStyle } = useReveal({ threshold: 0.1 });
   return (
     <section data-context-section="projects" id="projekty" className="section-apple">
-      <div className="container-read">
+      <div className="container-apple">
         <div className="mb-3 flex items-center justify-between gap-3">
           <p className="eyebrow">Projekty</p>
           <EchoTrigger sectionId="projects" />
@@ -66,43 +81,64 @@ export default function Projects() {
           Každej projekt má svůj příběh. Tady je vysvětlenej lidsky — ne technicky.
         </p>
 
-        <div ref={sectionRef} style={sectionStyle} className="space-y-8">
+        <div ref={sectionRef} style={sectionStyle} className="space-y-16 md:space-y-24">
           {projects.map((project, i) => (
-            <div
+            <article
               key={project.id}
               data-context-project={project.id}
-              className="glass-card relative p-6 md:p-8 animate-fade-in-up transition-colors hover:border-gold"
-              style={{ animationDelay: `${i * 0.1}s` }}
+              className="group animate-fade-in-up"
+              style={{ animationDelay: `${i * 0.08}s` }}
             >
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <h3 className="text-lg font-semibold">
-                  {project.link ? (
-                    <a
-                      href={project.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 hover:text-gold transition-colors"
-                    >
-                      {project.name}
-                      <ExternalLinkIcon size={14} />
-                    </a>
-                  ) : (
-                    project.name
-                  )}
-                </h3>
-                <EchoTrigger projectId={project.id} />
+              {/* Screenshot — tvář projektu */}
+              <a
+                href={project.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--card-shadow)] transition-all duration-500 hover:border-gold"
+              >
+                <img
+                  src={project.shot}
+                  alt={`Screenshot projektu ${project.name}`}
+                  loading="lazy"
+                  className="aspect-[16/10] w-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
+                />
+              </a>
+
+              {/* Text */}
+              <div className="mt-6 md:mt-8">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <h3 className="text-2xl font-semibold md:text-3xl">
+                    {project.link ? (
+                      <a
+                        href={project.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 hover:text-gold transition-colors"
+                      >
+                        {project.name}
+                        <ExternalLinkIcon size={16} />
+                      </a>
+                    ) : (
+                      project.name
+                    )}
+                  </h3>
+                  <EchoTrigger projectId={project.id} />
+                </div>
+
+                <div className="longform max-w-3xl">
+                  <p className="text-lg leading-relaxed md:text-xl" style={{ color: "var(--text-primary)" }}>
+                    {project.description}
+                  </p>
+                  <p className="mt-4" style={{ color: "var(--text-muted)" }}>
+                    {project.detail}
+                  </p>
+                </div>
               </div>
-              <div className="longform">
-                <p>{project.description}</p>
-                <p className="mt-4" style={{ color: "var(--text-muted)" }}>
-                  {project.detail}
-                </p>
-              </div>
-            </div>
+            </article>
           ))}
         </div>
 
-        <div className="mt-12 text-center">
+        <div className="mt-16 text-center">
           <a
             href="https://petrpiskacek.cloud"
             target="_blank"
