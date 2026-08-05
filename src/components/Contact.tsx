@@ -12,8 +12,7 @@ export default function Contact() {
         <p className="eyebrow mb-3">Kontakt</p>
         <h2 className="headline-lg mb-4">Chceš to zkusit?</h2>
         <p className="subhead mb-8 mx-auto max-w-md">
-          Napiš mi. Domluvíme se, co potřebuješ, a já ti ukážu, jak to udělat.
-          Žádný korporát. Žádný zbytečný meetingy.
+          Chceš to zkusit? Domluvíme se, co potřebuješ, a já ti ukážu, jak to udělat.
         </p>
         <a
           href="mailto:ppix50@gmail.com"
