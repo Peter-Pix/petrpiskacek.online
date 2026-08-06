@@ -98,6 +98,9 @@ export default function ChatBot() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const autoSendTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const raisedRef = useRef<HTMLElement | null>(null);
+  // Sleduje, pro který kontext už byla uvítací zpráva odeslána.
+  // Zabraňuje duplicitnímu auto-sendu při přepínání kontextu bez zavření panelu.
+  const autoSentForRef = useRef<string | null>(null);
 
   // ── Auto-send + cleanup (single effect, no race) ──────────────
 
@@ -110,23 +113,40 @@ export default function ChatBot() {
     if (!open) {
       setMessages([]);
       setLastAssistantId(null);
+      autoSentForRef.current = null;
       return;
     }
+
+    // Identifikátor aktuálního kontextu — když se změní, pošleme novou uvítací zprávu,
+    // ale jen pokud se panel právě otevřel (ne při přepnutí kontextu za běhu).
+    const contextKey = context.project
+      ? `project:${context.project.id}`
+      : context.section
+        ? `section:${context.section.id}`
+        : "default";
+
+    // Pokud je panel už otevřený (autoSentForRef se nevyčistil) a jen se změnil kontext,
+    // NEposíláme novou uvítací zprávu — jen přepneme badge. To je žádoucí chování.
+    const isFreshOpen = autoSentForRef.current === null;
 
     setMessages([]);
     setLastAssistantId(null);
 
     const { user: autoMsg, assistant: firstReply } = buildFirstMessage(context);
 
-    autoSendTimerRef.current = setTimeout(() => {
-      setMessages((prev) => {
-        if (prev.length > 0) return prev;
-        return [
-          { role: "user" as const, content: autoMsg },
-          { role: "assistant" as const, content: firstReply },
-        ];
-      });
-    }, 600);
+    // Uvítací zprávu pošleme jen při čerstvém otevření panelu.
+    if (isFreshOpen) {
+      autoSentForRef.current = contextKey;
+      autoSendTimerRef.current = setTimeout(() => {
+        setMessages((prev) => {
+          if (prev.length > 0) return prev;
+          return [
+            { role: "user" as const, content: autoMsg },
+            { role: "assistant" as const, content: firstReply },
+          ];
+        });
+      }, 600);
+    }
 
     return () => {
       if (autoSendTimerRef.current) {
@@ -146,22 +166,27 @@ export default function ChatBot() {
       if (target.closest("[data-echo-panel]")) return;
       closeEcho();
     }
-    const t = setTimeout(() => document.addEventListener("click", handleClick), 0);
-    return () => {
-      clearTimeout(t);
-      document.removeEventListener("click", handleClick);
-    };
+    // Přidáváme listener okamžitě (bez setTimeout), aby byl vždy správně
+    // odebrán v cleanup při unmount/zavření. Žádný memory leak.
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
   }, [open, closeEcho]);
 
   // ── Card raise animation ──────────────────────────────────────
 
+  // Vrátí předchozí zvednutou kartu do původního stavu (bez animačních artefaktů).
+  const resetRaised = useCallback(() => {
+    if (raisedRef.current) {
+      raisedRef.current.style.transform = "";
+      raisedRef.current.style.transition = "";
+      raisedRef.current.style.boxShadow = "";
+      raisedRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     if (!open) {
-      if (raisedRef.current) {
-        raisedRef.current.style.transform = "";
-        raisedRef.current.style.transition = "";
-        raisedRef.current = null;
-      }
+      resetRaised();
       return;
     }
 
@@ -171,21 +196,25 @@ export default function ChatBot() {
         ? `[data-context-section="${context.section.id}"]`
         : null;
 
-    if (!selector) return;
+    if (!selector) {
+      resetRaised();
+      return;
+    }
 
     const el = document.querySelector(selector) as HTMLElement | null;
     if (!el || raisedRef.current === el) return;
 
-    if (raisedRef.current) {
-      raisedRef.current.style.transform = "";
-      raisedRef.current.style.transition = "";
-    }
+    // Nejdřív vrať předchozí kartu do původního stavu.
+    resetRaised();
 
     raisedRef.current = el;
     el.style.transition = "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s ease";
     el.style.transform = "translateY(-8px) scale(1.02)";
     el.style.boxShadow = "0 24px 64px rgba(0, 0, 0, 0.4)";
-  }, [open, context]);
+
+    // Cleanup při změně kontextu / unmount — vrat kartu do původního stavu.
+    return resetRaised;
+  }, [open, context, resetRaised]);
 
   // ── ESC ───────────────────────────────────────────────────────
 

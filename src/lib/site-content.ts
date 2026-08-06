@@ -176,25 +176,81 @@ export function classifyQuestion(query: string): QuestionType {
 }
 
 // Najde kontext podle textu dotazu.
+// ── Fuzzy context matching ──────────────────────────────────────
+// Hledá napříč VŠEMI poli projektu/sekce (ne jen keywords), aby Echo
+// našel kontext i pro dotazy, které nepoužívají přesné klíčové slovo.
+
+// Tokenizace: malá písmena, odstraní diakritiku a interpunkci, rozdělí na slova.
+// Ignoruje stop-slova (běžná česká slova bez identifikační hodnoty), aby
+// nedošlo k falešným shodám (např. "žádný" by nemělo shodit na scrollo).
+const STOP_WORDS = new Set([
+  "aby", "ale", "asi", "atd", "bez", "bud", "bude", "bylo", "byt", "co",
+  "cely", "cesky", "dalsi", "dela", "delat", "den", "dnes", "dva", "ho",
+  "hodne", "jak", "jako", "jaky", "jen", "jeho", "jeste", "jiny", "jsi",
+  "jsou", "kdyz", "ktery", "kte", "ma", "me", "mezi", "mi", "mit", "moc",
+  "muze", "muzes", "na", "nebo", "nekdo", "neco", "nemu", "neni", "nez",
+  "nic", "nove", "od", "podle", "podle", "prave", "pres", "pro", "protoze",
+  "sam", "sami", "se", "si", "tak", "take", "taky", "ten", "te", "tim",
+  "to", "tom", "tomas", "tu", "uz", "vse", "vsechny", "zadna", "zadny",
+  "zda", "zkusit", "zvolis", "aby", "ale", "asi", "bez", "ceho", "dva",
+  "jak", "jako", "kdo", "kdy", "kde", "kdyz", "ktery", "proc", "z", "s",
+]);
+
+function tokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // odstraní diakritiku
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !STOP_WORDS.has(w)); // stop-slova pryč
+}
+
+// Vrátí, kolik tokenů dotazu se objevilo v textu (fuzzy overlap).
+function countOverlap(queryTokens: string[], text: string): number {
+  const textTokens = tokenize(text);
+  let score = 0;
+  for (const q of queryTokens) {
+    for (const t of textTokens) {
+      // Přesná shoda tokenu, nebo shoda prefixu (např. "vocal" → "vocalbrain").
+      if (t === q || (t.length > 3 && t.startsWith(q)) || (q.length > 3 && q.startsWith(t))) {
+        score += 1;
+        break;
+      }
+    }
+  }
+  return score;
+}
+
+// Všechna prohledávaná pole projektu — řazená podle důležitosti.
+function projectSearchText(p: Project): string {
+  return [p.name, p.fact, p.why, p.wow, p.next, p.detail, ...p.keywords].join(" ");
+}
+
+function sectionSearchText(s: Section): string {
+  return [s.title, s.summary, s.wow || "", ...s.keywords].join(" ");
+}
+
 export function findContext(
   query: string,
 ): { section?: Section; project?: Project } {
   const q = query.toLowerCase().trim();
   if (!q) return {};
 
+  // Přesná shoda na id nebo jméno — nejvyšší priorita.
   for (const p of PROJECTS) {
-    if (q.includes(p.id) || p.name.toLowerCase().includes(q) || q.includes(p.name.toLowerCase())) {
+    if (q.includes(p.id) || q.includes(p.name.toLowerCase())) {
       return { project: p };
     }
   }
 
+  const qTokens = tokenize(q);
+  if (qTokens.length === 0) return {};
+
   let bestProject: Project | undefined;
   let bestProjectScore = 0;
   for (const p of PROJECTS) {
-    let score = 0;
-    for (const kw of p.keywords) {
-      if (q.includes(kw)) score += 2;
-    }
+    const score = countOverlap(qTokens, projectSearchText(p));
     if (score > bestProjectScore) {
       bestProjectScore = score;
       bestProject = p;
@@ -204,20 +260,25 @@ export function findContext(
   let bestSection: Section | undefined;
   let bestSectionScore = 0;
   for (const s of SITE_SECTIONS) {
-    let score = 0;
-    for (const kw of s.keywords) {
-      if (q.includes(kw)) score += 1;
-    }
+    const score = countOverlap(qTokens, sectionSearchText(s));
     if (score > bestSectionScore) {
       bestSectionScore = score;
       bestSection = s;
     }
   }
 
-  return {
-    section: bestSectionScore > 0 ? bestSection : undefined,
-    project: bestProjectScore > 0 ? bestProject : undefined,
-  };
+  // Projekt má přednost, ale jen pokud je dostatečná shoda.
+  if (bestProjectScore >= 1 && bestProjectScore >= bestSectionScore) {
+    return { project: bestProject };
+  }
+  if (bestSectionScore >= 1) {
+    return { section: bestSection };
+  }
+  if (bestProjectScore >= 1) {
+    return { project: bestProject };
+  }
+
+  return {};
 }
 
 // Prompt direktiva podle typu otázky.
