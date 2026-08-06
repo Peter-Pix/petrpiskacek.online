@@ -121,7 +121,7 @@ export const PROJECTS: Project[] = [
     detail:
       "Shromažďuje ověřené informace, ukazuje propojení interpretů, alb, měst, žánrů. 1200+ entit, skoro 6000 vazeb. Petr říká, že je to k ničemu. A právě v tom je krása.",
     link: "https://4rap.cz",
-    keywords: ["4rap", "rap", "český rap", "hudba", "databáze"],
+    keywords: ["4rap", "rap", "český rap", "rapu", "rapova", "rapová", "scéna", "hudba", "databáze", "interpret"],
   },
 ];
 
@@ -194,6 +194,10 @@ const STOP_WORDS = new Set([
   "to", "tom", "tomas", "tu", "uz", "vse", "vsechny", "zadna", "zadny",
   "zda", "zkusit", "zvolis", "aby", "ale", "asi", "bez", "ceho", "dva",
   "jak", "jako", "kdo", "kdy", "kde", "kdyz", "ktery", "proc", "z", "s",
+  "web", "weby", "stranky", "stranka", "projekt", "projekty", "funguje",
+  "fungovat", "dela", "delat", "prace", "veci", "veci", "tak", "nejaky",
+  "mluvit", "mluvis", "mluvi", "mluvime", "petr", "petra", "piskacek",
+  "povidej", "rekni", "vysvetli", "zajima", "zajimave",
 ]);
 
 function tokenize(text: string): string[] {
@@ -212,8 +216,24 @@ function countOverlap(queryTokens: string[], text: string): number {
   let score = 0;
   for (const q of queryTokens) {
     for (const t of textTokens) {
-      // Přesná shoda tokenu, nebo shoda prefixu (např. "vocal" → "vocalbrain").
-      if (t === q || (t.length > 3 && t.startsWith(q)) || (q.length > 3 && q.startsWith(t))) {
+      // Přesná shoda tokenu.
+      if (t === q) {
+        score += 1;
+        break;
+      }
+      // Fuzzy shoda přes společný prefix (stemming-lite):
+      // - oba ≥ 4 znaky
+      // - sdílejí společný začátek ≥ 4 znaků
+      // - délky se liší maximálně o 3 (jsou to tvary stejného slova)
+      let shared = 0;
+      const max = Math.min(q.length, t.length);
+      while (shared < max && q[shared] === t[shared]) shared++;
+      if (
+        q.length >= 4 &&
+        t.length >= 4 &&
+        shared >= 4 &&
+        Math.abs(q.length - t.length) <= 3
+      ) {
         score += 1;
         break;
       }
@@ -267,11 +287,12 @@ export function findContext(
     }
   }
 
-  // Projekt má přednost, ale jen pokud je dostatečná shoda.
+  // Projekt má přednost — dotaz na konkrétní věc je spíš o projektu než o sekci.
+  // Při rovnosti skóre vyhrává projekt.
   if (bestProjectScore >= 1 && bestProjectScore >= bestSectionScore) {
     return { project: bestProject };
   }
-  if (bestSectionScore >= 1) {
+  if (bestSectionScore >= 2) {
     return { section: bestSection };
   }
   if (bestProjectScore >= 1) {
