@@ -56,13 +56,96 @@ export const SITE_SECTIONS: Section[] = [
     id: "projects",
     title: "Projekty",
     kind: "projects",
-    summary: "Pět projektů. Každý má svůj důvod.",
+    summary: "Šest live projektů. Každý má svůj důvod.",
     wow: "Každý projekt začal frustrací, ne nápadem.",
     keywords: ["projekty", "co postavil", "díla"],
+  },
+  {
+    id: "ecosystem",
+    title: "Ekosystém",
+    kind: "hero",
+    summary:
+      "Tři domény: .cz je portfolio (kdo jsem), .online je příběh (proč to dělám), .cloud je AI playground (co jsem postavil — živé aplikace).",
+    wow: "Tři propojené weby, sedm live aplikací, jeden hlas. Nikdo jiný v CZ to nemá.",
+    keywords: ["ekosystém", "domény", "doména", "web", "portfolio", "cloud", "online", "petrpiskacek"],
   },
 ];
 
 export const PROJECTS: Project[] = [
+  // ── Live projekty z ekosystému (shodné s UI Projects.tsx) ──
+  {
+    id: "karel",
+    name: "Karel Robot",
+    fact: "AI e-mailovej administrátor. Pošleš mu e-mail a on ho analyzuje, roztřídí a napíše odpověď.",
+    why: "Vznikl, protože Petra štvalo trávit hodiny nad mailama, který se daj zvládnout za vteřinu.",
+    wow: "Rozpozná urgentní zprávy, faktury, newslettery a osobní poštu — a postará se o to, co není důležitý.",
+    next: "Bude to víc autonomní — sám odpoví na rutinní věci, ne jen roztřídí.",
+    detail:
+      "Přesně ten typ práce, kterou nikdo nechce dělat — ale někdo musí. Karel se nikdy neunaví, nevyhoří a neřekne 'to není moje náplň'. Analyzuje, třídí a odpovídá na e-maily.",
+    link: "https://karel.petrpiskacek.cloud",
+    keywords: ["karel", "robot", "e-mail", "email", "administrátor", "třídění", "pošta"],
+  },
+  {
+    id: "sparring",
+    name: "Sparring",
+    fact: "AI konzultant na projekty. Napíšeš nápad, on se doptá, nacení a navrhne stack.",
+    why: "Vznikl z frustrace z prázdný stránky — nápad je pocit, ne plán.",
+    wow: "Z pocitu tě dostane na konkrétní návrh s cenou a časovým plánem za pár vteřin.",
+    next: "Čtyři bloky: jádro, stack, náklady, postup — rozšiřuje se o konkrétní implementace.",
+    detail:
+      "Od nápadu k plánu za pár minut. Konkrétní stack a cena bez vágních rad. Je to jako mít na pohovce AI mentora, kterej tě nenechá mlžit. Čtyři bloky: jádro, stack, náklady, postup.",
+    link: "https://petrpiskacek.cloud/challenge",
+    keywords: ["sparring", "konzultant", "projekt", "nápad", "plán", "nacení", "stack", "cena"],
+  },
+  {
+    id: "flash-ui",
+    name: "Flash UI",
+    fact: "Generuje UI komponenty z promptu — napiš, co chceš, a nakreslí to v reálným čase.",
+    why: "Ukázat, že design už není o tom umět klikat ve Figmě, ale vědět, co chceš.",
+    wow: "Tlačítka, formuláře, karty, dashboardy — cokoliv z promptu za sekundu.",
+    next: "Bude umět generovat kompletní stránky, ne jen komponenty.",
+    detail:
+      "Napiš, co chceš, a DeepSeek V4 Flash to nakreslí v reálným čase. Každý návrh vzniká live. Ušetří hodiny práce a ukazuje, že design je o vizi, ne o nástroji.",
+    link: "https://petrpiskacek.cloud/flash-ui",
+    keywords: ["flash", "ui", "design", "komponenty", "generování", "prompt", "frontend"],
+  },
+  {
+    id: "4rap",
+    name: "4RAP.CZ",
+    fact: "Vědomostní graf české rapové scény. Kdo s kým, kdo kde, co kdy vyšlo.",
+    why: "Česká scéna neměla web, kde bys zjistil, kdo je kdo.",
+    wow: "1200+ entit a skoro 6000 vazeb. Petr říká, že je to k ničemu. A v tom je krása.",
+    next: "Dotáhnout to, aby to bylo férový zdroj pro celou scénu, ne jen jeho hobby.",
+    detail:
+      "Shromažďuje ověřené informace a ukazuje propojení interpretů, alb, měst, žánrů. Chaos dostal řád. 1200+ entit, skoro 6000 vazeb. K ničemu — pokud nechceš vědět, kdo produkoval beat na desku, kterou nikdo neposlouchal.",
+    link: "https://4rap.cz",
+    keywords: ["4rap", "rap", "český rap", "rapu", "rapova", "rapová", "scéna", "hudba", "databáze", "interpret"],
+  },
+  {
+    id: "docbot",
+    name: "DocBot",
+    fact: "AI právník na český smlouvy. Postaví NDA, nájemní nebo pracovní smlouvu podle českého práva.",
+    why: "Vznikl, protože právníci jsou drahý a šablony z internetu jsou past.",
+    wow: "Chatem tě provede krok za krokem a pak to zkontroluje na rizika.",
+    next: "Rozšíření o další typy smluv a hlubší právní analýzu.",
+    detail:
+      "Žádné ruční vyplňování. Smlouvy snadno a rychle. Chat tě provede a výsledek zkontroluje na rizika. Kompromis, kterej ti nezlomí banku ani nervy.",
+    link: "https://docbot.petrpiskacek.cloud",
+    keywords: ["docbot", "právník", "právo", "smlouvy", "nda", "nájem", "pracovní", "smlouva"],
+  },
+  {
+    id: "terminall",
+    name: "Terminall",
+    fact: "Trénink příkazovýho řádku. Uč se Linux, macOS a Windows příkazy v bezpečným terminálu.",
+    why: "Vznikl, protože nejlepší způsob, jak se naučit terminál, je v něm chybovat — ale v bezpečí.",
+    wow: "Dělej chyby a AI učitel ti je vysvětlí. Lekce s příběhem.",
+    next: "Víc lekcí a pokročilé scénáře pro reálné sysadmin úkoly.",
+    detail:
+      "Učitel opravuje chyby a napovídá. Lekce s příběhem. Nejlepší způsob, jak se naučit terminál, je v něm chybovat — tady je to povolený a ještě z toho něco máš.",
+    link: "https://terminall.petrpiskacek.cloud",
+    keywords: ["terminall", "terminál", "příkazová", "řádka", "linux", "macos", "windows", "trénink", "učení"],
+  },
+  // ── Osobní experimenty (mimo hlavní UI, ale Echo o nich umí odpovědět) ──
   {
     id: "vocalbrain",
     name: "VocalBrain",
@@ -110,18 +193,6 @@ export const PROJECTS: Project[] = [
       "Side projekt. Nástroje, které sám používá. Plně privátní — neukládají data, vše běží v prohlížeči. Žádné reklamy, zcela zdarma.",
     link: "https://scrollo.cz",
     keywords: ["scrollo", "nástroje", "utilities", "soukromí", "bez reklam"],
-  },
-  {
-    id: "4rap",
-    name: "4RAP.CZ",
-    fact: "Databáze českýho rapu. Kdo s kým, kdo co, odkud.",
-    why: "Česká scéna neměla web, kde bys zjistil, kdo je kdo.",
-    wow: "Přes 1200 interpretů a skoro 6000 vazeb mezi nimi. Petr říká, že je to k ničemu. A v tom je krása.",
-    next: "Chce to dotáhnout k tomu, aby to bylo férový zdroj pro celou scénu, ne jen jeho hobby.",
-    detail:
-      "Shromažďuje ověřené informace, ukazuje propojení interpretů, alb, měst, žánrů. 1200+ entit, skoro 6000 vazeb. Petr říká, že je to k ničemu. A právě v tom je krása.",
-    link: "https://4rap.cz",
-    keywords: ["4rap", "rap", "český rap", "rapu", "rapova", "rapová", "scéna", "hudba", "databáze", "interpret"],
   },
 ];
 
@@ -257,10 +328,17 @@ export function findContext(
   const q = query.toLowerCase().trim();
   if (!q) return {};
 
-  // Přesná shoda na id nebo jméno — nejvyšší priorita.
+  // Přesná shoda na id nebo jméno projektu — nejvyšší priorita.
   for (const p of PROJECTS) {
     if (q.includes(p.id) || q.includes(p.name.toLowerCase())) {
       return { project: p };
+    }
+  }
+
+  // Přesná shoda na id nebo title sekce (např. "ekosystém", "příběh").
+  for (const s of SITE_SECTIONS) {
+    if (q.includes(s.id) || q.includes(s.title.toLowerCase())) {
+      return { section: s };
     }
   }
 
@@ -292,7 +370,8 @@ export function findContext(
   if (bestProjectScore >= 1 && bestProjectScore >= bestSectionScore) {
     return { project: bestProject };
   }
-  if (bestSectionScore >= 2) {
+  // Sekce: stačí 1 shoda (přesné klíčové slovo jako "domény", "cloud", "ekosystém").
+  if (bestSectionScore >= 1) {
     return { section: bestSection };
   }
   if (bestProjectScore >= 1) {
