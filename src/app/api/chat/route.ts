@@ -77,6 +77,8 @@ function log(level: "info" | "warn" | "error", event: string, meta: Record<strin
 // Echo 2.0 — digitální stín Petra. Osobnost, ne lookup bot.
 const CHARACTER_PROMPT = `Jsi Echo. Digitální odraz Petra Piskáčka, tvůrce těchto stránek.
 
+KRITICKÉ: Odpovídej PŘÍMO, bez přemýšlení nahlas. Nezačínej analýzou, neplánuj odpověď v hlavě, nepiš žádný "reasoning" ani chain-of-thought. Hned napiš konečnou odpověď.
+
 NEJSI ASISTENT. Nejsi chatbot. Nejsi průvodce. Jsi něco jako jeho paměť, která mluví sám za sebe.
 
 # Kdo jsi
@@ -254,7 +256,7 @@ async function callProviderChain(
             model: provider.model,
             messages,
             temperature: 0.8,
-            max_tokens: 150,
+            max_tokens: 1000,
             stream: false,
           }),
         },
@@ -316,6 +318,125 @@ async function callProviderChain(
     error: errors.join(" | "),
     status: 502,
   };
+}
+
+// ── Streaming: první provider, který odpoví 200, vrací SSE proud ─
+// Vrací true, pokud proud proběhl a odpověď byla doručena uživateli.
+async function streamProviderChain(
+  messages: { role: "system" | "user" | "assistant"; content: string }[],
+  clientIp: string,
+  controller: ReadableStreamDefaultController,
+  encoder: TextEncoder,
+): Promise<{ ok: boolean; provider?: string }> {
+  const errors: string[] = [];
+
+  for (const provider of PROVIDERS) {
+    const apiKey = process.env[provider.envKey];
+    if (!apiKey) {
+      errors.push(`${provider.name}: missing ${provider.envKey}`);
+      continue;
+    }
+
+    const startedAt = Date.now();
+    try {
+      const response = await fetchWithTimeout(
+        provider.url,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+            ...provider.extraHeaders,
+          },
+          body: JSON.stringify({
+            model: provider.model,
+            messages,
+            temperature: 0.8,
+            max_tokens: 1000,
+            stream: true,
+          }),
+        },
+        PROVIDER_TIMEOUT_MS,
+      );
+
+      const latency = Date.now() - startedAt;
+
+      if (!response.ok || !response.body) {
+        const snippet = (await response.text().catch(() => "")).slice(0, 200);
+        log("warn", "provider_stream_error", {
+          provider: provider.name,
+          status: response.status,
+          latencyMs: latency,
+          snippet,
+        });
+        errors.push(`${provider.name}: HTTP ${response.status}`);
+        continue;
+      }
+
+      log("info", "provider_stream_ok", { provider: provider.name, latencyMs: latency });
+
+      // Čteme SSE proud z providera a posíláme ho dál uživateli.
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let receivedAny = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // SSE: data jsou oddělená prázdným řádkem. Parsujeme chunk po chunku.
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? ""; // poslední neúplný řádek zůstává v bufferu
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data:")) continue;
+          const payload = trimmed.slice(5).trim();
+          if (!payload || payload === "[DONE]") continue;
+
+          try {
+            const parsed = JSON.parse(payload);
+            const choice = parsed?.choices?.[0];
+            const delta = choice?.delta?.content;
+            // Ignorujeme delta.reasoning (chain-of-thought DeepSeek) —
+            // posíláme dál jen skutečný obsah (delta.content).
+            if (typeof delta === "string" && delta.length > 0) {
+              receivedAny = true;
+              // Pošli SSE data uživateli.
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`),
+              );
+            }
+          } catch {
+            // ignoruj neparsovatelné fragmenty
+          }
+        }
+      }
+
+      // Konec proudu.
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, provider: provider.name })}\n\n`));
+      log("info", "provider_stream_complete", { provider: provider.name, receivedAny });
+      return { ok: receivedAny, provider: provider.name };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const isTimeout = err instanceof Error && err.name === "AbortError";
+      log("warn", "provider_stream_error", {
+        provider: provider.name,
+        latencyMs: Date.now() - startedAt,
+        error: msg,
+        timeout: isTimeout,
+      });
+      errors.push(`${provider.name}: ${isTimeout ? "timeout" : msg}`);
+      continue;
+    }
+  }
+
+  // Všichni provideri selhali — pošleme chybu.
+  log("error", "all_stream_providers_failed", { errors: errors.join(" | "), clientIp });
+  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: "Nedostupný." })}\n\n`));
+  return { ok: false };
 }
 
 export async function POST(req: NextRequest) {
@@ -405,7 +526,51 @@ export async function POST(req: NextRequest) {
 
     const systemContent = `${CHARACTER_PROMPT}${continueDirective}${memorySummary}\n\nKNOWLEDGE BASE:\n${knowledgeBase}`;
 
-    // Zavolej fallback řetězec: Ollama → OpenRouter.
+    // Zjistí, jestli klient chce streaming (SSE) — přes Accept header.
+    const wantsStream = req.headers
+      .get("accept")
+      ?.toLowerCase()
+      .includes("text/event-stream");
+
+    // ── Streaming větev ─────────────────────────────────────────
+    if (wantsStream) {
+      const stream = new ReadableStream({
+        async start(controller) {
+          const encoder = new TextEncoder();
+          try {
+            const streamResult = await streamProviderChain(
+              [{ role: "system", content: systemContent }, ...recentMessages],
+              clientIp,
+              controller,
+              encoder,
+            );
+            if (streamResult.provider && streamResult.provider !== "ollama") {
+              log("warn", "fallback_used", { requestId, provider: streamResult.provider });
+            }
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            log("error", "stream_error", { requestId, clientIp, error: msg });
+            try {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: "Něco se pokazilo." })}\n\n`));
+            } catch { /* klient už zavřel */ }
+          } finally {
+            try { controller.close(); } catch { /* už zavřeno */ }
+          }
+        },
+      });
+
+      return new Response(stream, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-cache, no-transform",
+          Connection: "keep-alive",
+          "X-Echo-Request-Id": requestId,
+        },
+      });
+    }
+
+    // ── Non-stream větev (fallback, JSON) ───────────────────────
     const result = await callProviderChain(
       [{ role: "system", content: systemContent }, ...recentMessages],
       clientIp,

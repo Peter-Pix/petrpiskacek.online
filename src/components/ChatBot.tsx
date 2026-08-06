@@ -3,9 +3,13 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { InfoIcon, CloseIcon } from "./icons";
 import { useEcho } from "@/lib/echo-context";
-import { PROJECTS, SITE_SECTIONS, type QuestionType } from "@/lib/site-content";
+import { PROJECTS, SITE_SECTIONS } from "@/lib/site-content";
 
-type Message = { role: "user" | "assistant"; content: string };
+type Message = {
+  role: "user" | "assistant";
+  content: string;
+  links?: { label: string; projectId: string }[];
+};
 
 // ── Quick replies ──────────────────────────────────────────────
 
@@ -88,7 +92,7 @@ function buildFirstMessage(ctx: { project?: { id: string; fact: string }; sectio
 // ── Component ──────────────────────────────────────────────────
 
 export default function ChatBot() {
-  const { open, closeEcho, context, contextBadge, setContextBadge } = useEcho();
+  const { open, closeEcho, openEcho, context, contextBadge, setContextBadge } = useEcho();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -249,37 +253,136 @@ export default function ChatBot() {
 
   // ── API ───────────────────────────────────────────────────────
 
+  // Rozparsuje [LINK:...] tagy z odpovědi a vrátí { text, links }.
+  // Links obsahují { label, projectId } — použijeme pro klikatelné chipy.
+  function parseLinks(raw: string): { text: string; links: { label: string; projectId: string }[] } {
+    const links: { label: string; projectId: string }[] = [];
+    const text = raw.replace(/\[LINK:([^\]]+)\]/g, (_m, inner: string) => {
+      const [label, projectId] = inner.split("|");
+      if (label && projectId) {
+        links.push({ label: label.trim(), projectId: projectId.trim() });
+        return ""; // tag se odstraní z textu, nahradí se chipem
+      }
+      return inner;
+    });
+    return { text, links };
+  }
+
   async function callApi(
     msg: string,
-    options: { questionType?: QuestionType; continueFrom?: boolean } = {},
+    options: { continueFrom?: boolean } = {},
   ) {
     // Read current messages via ref to avoid stale closure
     const currentMessages = messagesRef.current;
 
+    // Vytvoříme placeholder pro assistant zprávu, kterou budeme plnit streamem.
+    const assistantId = messagesRef.current.length;
+    addAssistantMessage(""); // prázdný placeholder
+
     const res = await fetch("/api/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "text/event-stream", // požádáme o streaming
+      },
       body: JSON.stringify({
         messages: [...currentMessages, { role: "user", content: msg }],
         clickedContext: context,
-        questionType: options.questionType,
         continueFrom: options.continueFrom,
       }),
     });
 
     if (!res.ok) {
-      addAssistantMessage("Promiň, teď nemůžu odpovědět. Zkus to znovu za chvíli.");
+      setMessages((prev) => {
+        const next = [...prev];
+        next[assistantId] = { role: "assistant", content: "Promiň, teď nemůžu odpovědět. Zkus to znovu za chvíli." };
+        return next;
+      });
       return;
     }
 
-    const data = await res.json();
-    const replies: string[] = data.replies || [];
-    if (replies.length === 0) {
-      addAssistantMessage("Promiň, teď nemůžu odpovědět. Zkus to znovu za chvíli.");
+    // Pokud server neodpověděl SSE (např. fallback na JSON), zpracuj JSON.
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("text/event-stream")) {
+      const data = await res.json();
+      const replies: string[] = data.replies || [];
+      const content = replies.length ? replies.join("\n") : "Promiň, teď nemůžu odpovědět. Zkus to znovu za chvíli.";
+      setMessages((prev) => {
+        const next = [...prev];
+        next[assistantId] = { role: "assistant", content };
+        return next;
+      });
       return;
     }
-    for (const r of replies) {
-      addAssistantMessage(r);
+
+    // ── Streaming: čteme SSE proud a vypisujeme slovo po slově ──
+    if (!res.body) return;
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let fullText = "";
+
+    const flush = () => {
+      setMessages((prev) => {
+        const next = [...prev];
+        const { text, links } = parseLinks(fullText);
+        next[assistantId] = { role: "assistant", content: text, links };
+        return next;
+      });
+    };
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // Parsujeme SSE: data: {...}\n\n
+        const events = buffer.split("\n\n");
+        buffer = events.pop() ?? "";
+
+        for (const evt of events) {
+          for (const line of evt.split("\n")) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith("data:")) continue;
+            const payload = trimmed.slice(5).trim();
+            if (!payload || payload === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(payload);
+              if (typeof parsed.delta === "string") {
+                fullText += parsed.delta;
+                flush(); // aktualizujeme každý delta
+              } else if (parsed.done) {
+                // konec
+              }
+            } catch { /* ignoruj fragmenty */ }
+          }
+        }
+      }
+    } catch {
+      // klient zavřel stream — ponecháme co máme
+    } finally {
+      // Zajistíme finální flush (i kdyby stream skončil bez done).
+      if (fullText) flush();
+      else if (!fullText.trim()) {
+        setMessages((prev) => {
+          const next = [...prev];
+          if (!next[assistantId].content) {
+            next[assistantId] = { role: "assistant", content: "Promiň, teď nemůžu odpovědět." };
+          }
+          return next;
+        });
+      }
+      // Zpráva se nakonec vyčistí přes parseLinks při renderu.
+      // Extrahujeme [LINK] tagy a uložíme je do message.links pro render chipů.
+      setMessages((prev) => {
+        const next = [...prev];
+        const raw = next[assistantId].content;
+        const { text, links } = parseLinks(raw);
+        next[assistantId] = { role: "assistant", content: text, links };
+        return next;
+      });
     }
   }
 
@@ -364,6 +467,10 @@ export default function ChatBot() {
       {/* Echo panel */}
       <div
         data-echo-panel
+        role="dialog"
+        aria-modal="true"
+        aria-label="Echo — hlas stránky"
+        aria-hidden={!open}
         className="fixed z-50 flex flex-col overflow-hidden"
         style={{
           backgroundColor: "rgba(20, 20, 25, 0.65)",
@@ -491,6 +598,28 @@ export default function ChatBot() {
                 }}
               >
                 {msg.content}
+                {/* Klikatelné chipy pro [LINK:...] tagy z odpovědi */}
+                {msg.role === "assistant" && msg.links && msg.links.length > 0 && (
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                    {msg.links.map((link, li) => (
+                      <button
+                        key={li}
+                        onClick={() => {
+                          const p = PROJECTS.find((pp) => pp.id === link.projectId);
+                          if (p) openEcho({ project: p });
+                        }}
+                        className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors"
+                        style={{
+                          backgroundColor: "rgba(200, 150, 46, 0.12)",
+                          border: "1px solid rgba(200, 150, 46, 0.35)",
+                          color: "var(--gold)",
+                        }}
+                      >
+                        {link.label} →
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -548,6 +677,7 @@ export default function ChatBot() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Napiš otázku..."
+              aria-label="Napiš otázku pro Echa"
               rows={1}
               className="max-h-24 min-h-[36px] flex-1 resize-none bg-transparent px-1 py-1.5 text-sm outline-none"
               style={{ color: "var(--text-primary)", caretColor: "var(--gold)" }}
