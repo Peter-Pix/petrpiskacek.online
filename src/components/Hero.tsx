@@ -165,10 +165,10 @@ export default function Hero() {
             className="flex animate-fade-in-up flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6"
             style={{ animationDelay: "0.4s" }}
           >
-            <a href="#pribeh" className="btn-apple btn-apple-primary w-full sm:w-auto">
+            <a href="#pribeh" className="btn-apple btn-apple-primary w-full sm:w-auto max-w-[60vw] sm:max-w-none">
               Zajímá tě proč?
             </a>
-            <a href="#projekty" className="btn-apple btn-apple-secondary w-full sm:w-auto">
+            <a href="#projekty" className="btn-apple btn-apple-secondary w-full sm:w-auto max-w-[60vw] sm:max-w-none">
               Prozkoumat projekty
             </a>
           </div>
