@@ -27,6 +27,7 @@ interface PostMeta {
   date: string;
   description: string;
   readTime: string;
+  featured?: boolean;
 }
 
 function getAllPosts(): PostMeta[] {
@@ -55,6 +56,7 @@ function getAllPosts(): PostMeta[] {
       date: frontmatter.date || "2000-01-01",
       description: frontmatter.description || "",
       readTime: frontmatter.readTime || "1 min",
+      featured: frontmatter.featured === "true",
     };
   });
 
@@ -63,6 +65,18 @@ function getAllPosts(): PostMeta[] {
 
 const posts = getAllPosts();
 const totalMinutes = posts.reduce((sum, p) => sum + parseInt(p.readTime), 0);
+
+function getFeaturedPost(posts: PostMeta[]): PostMeta | null {
+  const candidateSlugs = posts.slice(3).map((p) => p.slug);
+  const featured = posts
+    .slice(3)
+    .filter((p) => p.featured);
+  if (featured.length === 0) return null;
+  const dayIndex = Math.floor(Date.now() / 86_400_000) % featured.length;
+  return featured[dayIndex];
+}
+
+const featuredPost = getFeaturedPost(posts);
 
 export default function BlogPage() {
   return (
@@ -74,6 +88,18 @@ export default function BlogPage() {
         <h1 className="mt-8 text-3xl font-bold tracking-tight">Blog</h1>
         <p className="mt-2 text-zinc-400">Myšlenky o AI, programování, životě a všem mezi tím.</p>
         <p className="mt-1 text-xs text-zinc-600">{totalMinutes} minut myšlenek</p>
+
+        {featuredPost && (
+          <section className="mt-10 rounded-lg border border-zinc-800 bg-zinc-900/50 p-5">
+            <p className="text-xs font-medium uppercase tracking-wider text-amber-500">Dnes doporučujeme</p>
+            <Link href={`/blog/${featuredPost.slug}`} className="group mt-2 block">
+              <h2 className="text-lg font-semibold group-hover:text-amber-500 transition-colors">
+                {featuredPost.title}
+              </h2>
+              <p className="mt-1 text-sm text-zinc-400 leading-relaxed">{featuredPost.description}</p>
+            </Link>
+          </section>
+        )}
 
         <div className="mt-12 space-y-8">
           {posts.map((post) => (

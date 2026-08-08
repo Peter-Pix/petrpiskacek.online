@@ -8,6 +8,7 @@ interface PostData {
   date: string;
   description: string;
   content: string;
+  nextPost?: string;
 }
 
 function getPost(slug: string): PostData | null {
@@ -34,6 +35,7 @@ function getPost(slug: string): PostData | null {
     date: frontmatter.date || "2000-01-01",
     description: frontmatter.description || "",
     content: match[2].trim(),
+    nextPost: frontmatter.nextPost,
   };
 }
 
@@ -64,6 +66,29 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: `${post.title} — Petr Piskacek`,
       description: post.description,
     },
+  };
+}
+
+function getNextPost(slug: string): { slug: string; title: string; description: string } | null {
+  const filePath = path.join(process.cwd(), "src/app/blog/posts", `${slug}.mdx`);
+  if (!fs.existsSync(filePath)) return null;
+  const raw = fs.readFileSync(filePath, "utf-8");
+  const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  if (!match) return null;
+  const frontmatter: Record<string, string> = {};
+  const lines = match[1].split("\n");
+  for (const line of lines) {
+    const sep = line.indexOf(": ");
+    if (sep > 0) {
+      const key = line.slice(0, sep).trim();
+      const val = line.slice(sep + 2).trim().replace(/^"(.*)"$/, "$1");
+      frontmatter[key] = val;
+    }
+  }
+  return {
+    slug,
+    title: frontmatter.title || slug,
+    description: frontmatter.description || "",
   };
 }
 
@@ -139,6 +164,20 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="mt-12 space-y-6 text-[1.0625rem] leading-relaxed text-[var(--text-secondary)] max-sm:text-[1rem]">
           {renderMdx(post.content)}
         </div>
+
+        {post.nextPost && (() => {
+          const next = getNextPost(post.nextPost);
+          if (!next) return null;
+          return (
+            <section className="mt-16 rounded-lg border border-zinc-800 bg-zinc-900/30 p-5">
+              <p className="text-xs font-medium uppercase tracking-wider text-amber-500">Další článek</p>
+              <Link href={`/blog/${next.slug}`} className="group mt-2 block">
+                <h2 className="text-lg font-semibold group-hover:text-amber-500 transition-colors">{next.title}</h2>
+                <p className="mt-1 text-sm text-zinc-400 leading-relaxed">{next.description}</p>
+              </Link>
+            </section>
+          );
+        })()}
       </article>
     </main>
   );
