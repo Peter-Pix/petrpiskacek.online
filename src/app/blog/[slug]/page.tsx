@@ -1,48 +1,9 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import fs from "fs";
-import path from "path";
-
-interface PostData {
-  title: string;
-  date: string;
-  description: string;
-  content: string;
-  nextPost?: string;
-}
-
-function getPost(slug: string): PostData | null {
-  const filePath = path.join(process.cwd(), "src/app/blog/posts", `${slug}.mdx`);
-  if (!fs.existsSync(filePath)) return null;
-
-  const raw = fs.readFileSync(filePath, "utf-8");
-  const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  if (!match) return null;
-
-  const frontmatter: Record<string, string> = {};
-  const lines = match[1].split("\n");
-  for (const line of lines) {
-    const sep = line.indexOf(": ");
-    if (sep > 0) {
-      const key = line.slice(0, sep).trim();
-      const val = line.slice(sep + 2).trim().replace(/^"(.*)"$/, "$1");
-      frontmatter[key] = val;
-    }
-  }
-
-  return {
-    title: frontmatter.title || slug,
-    date: frontmatter.date || "2000-01-01",
-    description: frontmatter.description || "",
-    content: match[2].trim(),
-    nextPost: frontmatter.nextPost,
-  };
-}
+import { getAllSlugs, getPost } from "@/lib/posts";
 
 export async function generateStaticParams() {
-  const postsDir = path.join(process.cwd(), "src/app/blog/posts");
-  const files = fs.readdirSync(postsDir).filter((f) => f.endsWith(".mdx"));
-  return files.map((f) => ({ slug: f.replace(/\.mdx$/, "") }));
+  return getAllSlugs().map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -66,29 +27,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: `${post.title} — Petr Piskacek`,
       description: post.description,
     },
-  };
-}
-
-function getNextPost(slug: string): { slug: string; title: string; description: string } | null {
-  const filePath = path.join(process.cwd(), "src/app/blog/posts", `${slug}.mdx`);
-  if (!fs.existsSync(filePath)) return null;
-  const raw = fs.readFileSync(filePath, "utf-8");
-  const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  if (!match) return null;
-  const frontmatter: Record<string, string> = {};
-  const lines = match[1].split("\n");
-  for (const line of lines) {
-    const sep = line.indexOf(": ");
-    if (sep > 0) {
-      const key = line.slice(0, sep).trim();
-      const val = line.slice(sep + 2).trim().replace(/^"(.*)"$/, "$1");
-      frontmatter[key] = val;
-    }
-  }
-  return {
-    slug,
-    title: frontmatter.title || slug,
-    description: frontmatter.description || "",
   };
 }
 
@@ -152,6 +90,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     );
   }
 
+  const nextPost = post.nextPost ? getPost(post.nextPost) : null;
+
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <article className="container-read mx-auto px-6 py-24">
@@ -165,19 +105,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           {renderMdx(post.content)}
         </div>
 
-        {post.nextPost && (() => {
-          const next = getNextPost(post.nextPost);
-          if (!next) return null;
-          return (
-            <section className="mt-16 rounded-lg border border-zinc-800 bg-zinc-900/30 p-5">
-              <p className="text-xs font-medium uppercase tracking-wider text-amber-500">Další článek</p>
-              <Link href={`/blog/${next.slug}`} className="group mt-2 block">
-                <h2 className="text-lg font-semibold group-hover:text-amber-500 transition-colors">{next.title}</h2>
-                <p className="mt-1 text-sm text-zinc-400 leading-relaxed">{next.description}</p>
-              </Link>
-            </section>
-          );
-        })()}
+        {nextPost && (
+          <section className="mt-16 rounded-lg border border-zinc-800 bg-zinc-900/30 p-5">
+            <p className="text-xs font-medium uppercase tracking-wider text-amber-500">Další článek</p>
+            <Link href={`/blog/${nextPost.slug}`} className="group mt-2 block">
+              <h2 className="text-lg font-semibold group-hover:text-amber-500 transition-colors">{nextPost.title}</h2>
+              <p className="mt-1 text-sm text-zinc-400 leading-relaxed">{nextPost.description}</p>
+            </Link>
+          </section>
+        )}
       </article>
     </main>
   );

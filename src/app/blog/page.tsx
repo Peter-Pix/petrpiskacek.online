@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import fs from "fs";
-import path from "path";
+import { getAllPosts, type PostMeta } from "@/lib/posts";
 
 export const metadata: Metadata = {
   title: "Blog — Petr Piskacek",
@@ -21,56 +20,11 @@ export const metadata: Metadata = {
   },
 };
 
-interface PostMeta {
-  slug: string;
-  title: string;
-  date: string;
-  description: string;
-  readTime: string;
-  featured?: boolean;
-}
-
-function getAllPosts(): PostMeta[] {
-  const postsDir = path.join(process.cwd(), "src/app/blog/posts");
-  const files = fs.readdirSync(postsDir).filter((f) => f.endsWith(".mdx"));
-
-  const posts: PostMeta[] = files.map((file) => {
-    const slug = file.replace(/\.mdx$/, "");
-    const content = fs.readFileSync(path.join(postsDir, file), "utf-8");
-    const frontmatter: Record<string, string> = {};
-    const match = content.match(/^---\n([\s\S]*?)\n---/);
-    if (match) {
-      const lines = match[1].split("\n");
-      for (const line of lines) {
-        const sep = line.indexOf(": ");
-        if (sep > 0) {
-          const key = line.slice(0, sep).trim();
-          const val = line.slice(sep + 2).trim().replace(/^"(.*)"$/, "$1");
-          frontmatter[key] = val;
-        }
-      }
-    }
-    return {
-      slug,
-      title: frontmatter.title || slug,
-      date: frontmatter.date || "2000-01-01",
-      description: frontmatter.description || "",
-      readTime: frontmatter.readTime || "1 min",
-      featured: frontmatter.featured === "true",
-    };
-  });
-
-  return posts.sort((a, b) => b.date.localeCompare(a.date));
-}
-
 const posts = getAllPosts();
 const totalMinutes = posts.reduce((sum, p) => sum + parseInt(p.readTime), 0);
 
 function getFeaturedPost(posts: PostMeta[]): PostMeta | null {
-  const candidateSlugs = posts.slice(3).map((p) => p.slug);
-  const featured = posts
-    .slice(3)
-    .filter((p) => p.featured);
+  const featured = posts.filter((p) => p.featured);
   if (featured.length === 0) return null;
   const dayIndex = Math.floor(Date.now() / 86_400_000) % featured.length;
   return featured[dayIndex];
