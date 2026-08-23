@@ -51,6 +51,15 @@ export function getAllSlugs(): string[] {
     .map((f) => f.replace(/\.mdx$/, ""));
 }
 
+const WORDS_PER_MINUTE = 200;
+
+/** Spočítá readTime z obsahu (slova / 200), zaokrouhleno nahoru. */
+export function calcReadTime(content: string): string {
+  const words = content.trim().split(/\s+/).length;
+  const minutes = Math.max(1, Math.ceil(words / WORDS_PER_MINUTE));
+  return `${minutes} min`;
+}
+
 /** Vrátí metadata všech postů, seřazené od nejnovějšího. */
 export function getAllPosts(): PostMeta[] {
   return getAllSlugs()
@@ -62,7 +71,7 @@ export function getAllPosts(): PostMeta[] {
         title: fm.title || slug,
         date: fm.date || "2000-01-01",
         description: fm.description || "",
-        readTime: fm.readTime || "1 min",
+        readTime: fm.readTime || calcReadTime(raw),
         featured: fm.featured === "true",
       } satisfies PostMeta;
     })
@@ -83,7 +92,7 @@ export function getPost(slug: string): PostData | null {
     title: frontmatter.title || slug,
     date: frontmatter.date || "2000-01-01",
     description: frontmatter.description || "",
-    readTime: frontmatter.readTime || "1 min",
+    readTime: frontmatter.readTime || calcReadTime(content),
     featured: frontmatter.featured === "true",
     content,
     nextPost: frontmatter.nextPost,
