@@ -6,24 +6,24 @@ import { useReveal } from "@/lib/use-reveal";
 
 const highlights = [
   {
-    slug: "zavri-hubu-nebo-otevru-terminal",
-    title: "Zavři hubu nebo otevřu terminál!",
-    excerpt: "Čím víc někdo o AI skutečně ví, tím míň má potřebu se k tomu vyjadřovat. Potkal jsem člověka, kterej mi na akci vysvětloval, že LLM jsou jen papoušci.",
-    date: "26. 7. 2026",
-    readTime: "3 min",
+    slug: "sny-jsou-kod",
+    title: "Sny jsou kód",
+    excerpt: "Kód není jen v počítači. Je v DNA, v pohybu planet a v pravidlech, kterými je postaven vesmír. Úvaha o tvorbě a řádu.",
+    date: "28. 6. 2026",
+    readTime: "5 min",
   },
   {
     slug: "vyjimecni-obycejnaci",
     title: "Výjimeční obyčejňáci",
     excerpt: "Nejde o to být nejchytřejší. Jde o to nebýt nejhloupější. A to je maximalistický minimalismus v praxi.",
-    date: "25. 7. 2026",
+    date: "3. 7. 2026",
     readTime: "4 min",
   },
   {
-    slug: "rozkosne-nedokonalosti",
-    title: "Rozkošné nedokonalosti",
-    excerpt: "I na půjčeným kole se dá dobře projet. O chaosu, autenticitě a tom, proč jsou nedokonalosti to jediný, co si lidi pamatujou.",
-    date: "26. 7. 2026",
+    slug: "zavri-hubu-nebo-otevru-terminal",
+    title: "Zavři hubu nebo otevřu terminál!",
+    excerpt: "Čím víc někdo o AI skutečně ví, tím míň má potřebu se k tomu vyjadřovat. Potkal jsem člověka, kterej mi na akci vysvětloval, že LLM jsou jen papoušci.",
+    date: "9. 7. 2026",
     readTime: "3 min",
   },
 ];
