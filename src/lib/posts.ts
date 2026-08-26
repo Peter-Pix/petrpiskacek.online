@@ -8,6 +8,7 @@ export interface PostMeta {
   description: string;
   readTime: string;
   featured?: boolean;
+  category?: string;
 }
 
 export interface PostData extends PostMeta {
@@ -15,7 +16,96 @@ export interface PostData extends PostMeta {
   nextPost?: string;
 }
 
+export interface BlogCategory {
+  id: string;
+  label: string;
+  tagline: string;
+}
+
 const POSTS_DIR = path.join(process.cwd(), "src/app/blog/posts");
+
+/**
+ * Kategorie blogu — pořadí v poli = pořadí na stránce.
+ * Každá kategorie má label (nadpis) a tagline (krátký podtitul).
+ */
+export const BLOG_CATEGORIES: BlogCategory[] = [
+  {
+    id: "agenti-automatizace",
+    label: "Agenti & Automatizace",
+    tagline: "Nechat práci dělat práci.",
+  },
+  {
+    id: "mluveni-s-ai",
+    label: "Jak mluvit s AI",
+    tagline: "Prompt je dialog, ne příkaz.",
+  },
+  {
+    id: "mysleni",
+    label: "Přemýšlení & Mindset",
+    tagline: "Nástroj je v hlavě, ne v ruce.",
+  },
+  {
+    id: "technologie-spolecnost",
+    label: "Technologie & Společnost",
+    tagline: "Co AI dělá s námi, ne jen pro nás.",
+  },
+  {
+    id: "zivot-tvorba",
+    label: "Život & Tvorba",
+    tagline: "Proč tvořit, když žijeme.",
+  },
+];
+
+/**
+ * Mapování slug → kategorie.
+ * Každý článek patří přesně do jedné kategorie (vícenásobné by rozbilo přehlednost).
+ */
+const SLUG_TO_CATEGORY: Record<string, string> = {
+  // Agenti & Automatizace
+  "kdo-nevidel-neuveri": "agenti-automatizace",
+  "automatizace-co-setri": "agenti-automatizace",
+  "proc-mam-tolik-projektu": "agenti-automatizace",
+  "ukaz-mi-tlacitko-schovej-tovarnu": "agenti-automatizace",
+  "labuti-jezero": "agenti-automatizace",
+
+  // Jak mluvit s AI
+  "mluvime-s-kladivem": "mluveni-s-ai",
+  "nenadavam-protoze-me-to-bavi": "mluveni-s-ai",
+  "parak-kterej-nezavidi": "mluveni-s-ai",
+  "ai-je-trochu-jako-sexy-holka": "mluveni-s-ai",
+
+  // Přemýšlení & Mindset
+  "obcas-je-dobry-mit-spatnej-napad": "mysleni",
+  "vyjimecni-obycejnaci": "mysleni",
+  "rozkosne-nedokonalosti": "mysleni",
+  "bojime-se-toho-co-nechapeme": "mysleni",
+
+  // Technologie & Společnost
+  "ai-neni-prirozena": "technologie-spolecnost",
+  "proc-nas-to-stve": "technologie-spolecnost",
+  "gemma-je-zdarma": "technologie-spolecnost",
+  "sny-jsou-kod": "technologie-spolecnost",
+  "prekvapeny-lektor": "technologie-spolecnost",
+  "zavri-hubu-nebo-otevru-terminal": "technologie-spolecnost",
+
+  // Život & Tvorba
+  "dar-pro-ty-co-zivot-milujou": "zivot-tvorba",
+  "legendario": "zivot-tvorba",
+  "proc-to-nedelaji-vsichni": "zivot-tvorba",
+};
+
+export function getCategoryForSlug(slug: string): BlogCategory | undefined {
+  const catId = SLUG_TO_CATEGORY[slug];
+  return BLOG_CATEGORIES.find((c) => c.id === catId);
+}
+
+/** Vrátí kategorie s přiřazenými posty (jen ty, které mají aspoň 1 článek). */
+export function getBlogSections(posts: PostMeta[]): Array<{ category: BlogCategory; posts: PostMeta[] }> {
+  return BLOG_CATEGORIES.map((category) => ({
+    category,
+    posts: posts.filter((p) => getCategoryForSlug(p.slug)?.id === category.id),
+  })).filter((s) => s.posts.length > 0);
+}
 
 /**
  * Parsuje YAML-like frontmatter z MDX souboru.
@@ -66,6 +156,7 @@ export function getAllPosts(): PostMeta[] {
     .map((slug) => {
       const raw = fs.readFileSync(path.join(POSTS_DIR, `${slug}.mdx`), "utf-8");
       const fm = parseFrontmatter(raw);
+      const category = getCategoryForSlug(slug);
       return {
         slug,
         title: fm.title || slug,
@@ -73,6 +164,7 @@ export function getAllPosts(): PostMeta[] {
         description: fm.description || "",
         readTime: fm.readTime || calcReadTime(raw),
         featured: fm.featured === "true",
+        category: category?.id,
       } satisfies PostMeta;
     })
     .sort((a, b) => b.date.localeCompare(a.date));
