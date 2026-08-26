@@ -32,7 +32,7 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
   {
     id: "agenti-automatizace",
     label: "Agenti & Automatizace",
-    tagline: "Nechat práci dělat práci.",
+    tagline: "Nechat stroje dělat práci.",
   },
   {
     id: "mluveni-s-ai",
@@ -47,7 +47,7 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
   {
     id: "technologie-spolecnost",
     label: "Technologie & Společnost",
-    tagline: "Co AI dělá s námi, ne jen pro nás.",
+    tagline: "AI dělá s námi, ne pro nás.",
   },
   {
     id: "zivot-tvorba",
