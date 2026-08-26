@@ -69,7 +69,7 @@ function PostCard({ post }: { post: PostMeta }) {
 /** Horizontálně scrollovatelný pás karet. */
 function CardRail({ posts }: { posts: PostMeta[] }) {
   return (
-    <div className="mt-10 -mx-6 overflow-x-auto px-6 pb-8 scrollbar-thin sm:-mx-8 sm:px-8 lg:mt-14 lg:pb-12">
+    <div className="mt-10 -mx-6 overflow-x-auto px-6 pt-10 pb-8 scrollbar-thin sm:-mx-8 sm:px-8 lg:mt-14 lg:pt-14 lg:pb-12">
       <div className="flex snap-x snap-mandatory gap-5 lg:gap-8">
         {posts.map((post) => (
           <PostCard key={post.slug} post={post} />
