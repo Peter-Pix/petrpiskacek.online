@@ -140,13 +140,7 @@ export default function BlogPage() {
         ))}
       </div>
 
-      <footer className="mt-32 pb-16">
-        <div className="container-apple px-6">
-          <p className="font-mono text-xs uppercase tracking-widest text-[var(--text-muted)]">
-            Petr Piskáček · petrpiskacek.online
-          </p>
-        </div>
-      </footer>
+      <div className="pb-24" />
     </main>
   );
 }
