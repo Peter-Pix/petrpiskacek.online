@@ -38,27 +38,29 @@ function PostCard({ post }: { post: PostMeta }) {
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="glass card-hover group flex w-[78vw] max-w-[340px] shrink-0 snap-start flex-col justify-between rounded-2xl p-6 max-sm:w-[82vw]"
+      className="group relative flex w-[80vw] max-w-[340px] shrink-0 snap-start flex-col justify-between rounded-[1.75rem] border border-[var(--border)] bg-[var(--surface)] p-7 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-2 hover:border-[rgba(200,150,46,0.45)] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.7)] max-sm:w-[84vw] sm:w-[60vw] sm:max-w-[360px] lg:w-[400px] lg:max-w-[400px] lg:p-10"
       aria-label={post.title}
     >
       <div>
-        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)] lg:text-xs lg:tracking-[0.2em]">
           <time dateTime={post.date}>{post.date}</time>
           <span className="text-[var(--border)]">·</span>
           <span>{post.readTime}</span>
         </div>
-        <h3 className="mt-4 text-lg font-semibold leading-snug text-[var(--text)] transition-colors duration-300 group-hover:text-[var(--gold)]">
+        <h3 className="mt-5 text-xl font-semibold leading-snug tracking-tight text-[var(--text)] transition-colors duration-300 group-hover:text-[var(--gold)] lg:mt-7 lg:text-[1.65rem] lg:leading-[1.2]">
           {post.title}
         </h3>
-        <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-[var(--text-secondary)]">
+        <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-[var(--text-secondary)] lg:mt-5 lg:text-[1.05rem] lg:leading-relaxed">
           {post.description}
         </p>
       </div>
-      <div className="mt-6 flex items-center gap-1 text-sm font-medium text-[var(--gold)]">
-        Číst
-        <svg className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M5 12h14M12 5l7 7-7 7" />
-        </svg>
+      <div className="mt-8 flex items-center gap-2 text-sm font-medium text-[var(--gold)] lg:mt-10 lg:text-base">
+        Číst článek
+        <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--gold)]/30 transition-all duration-300 group-hover:border-[var(--gold)] group-hover:bg-[var(--gold)] group-hover:text-zinc-950 lg:h-9 lg:w-9">
+          <svg className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </span>
       </div>
     </Link>
   );
@@ -67,8 +69,8 @@ function PostCard({ post }: { post: PostMeta }) {
 /** Horizontálně scrollovatelný pás karet. */
 function CardRail({ posts }: { posts: PostMeta[] }) {
   return (
-    <div className="mt-10 -mx-6 overflow-x-auto px-6 pb-6 scrollbar-thin sm:-mx-8 sm:px-8">
-      <div className="flex snap-x snap-mandatory gap-5">
+    <div className="mt-10 -mx-6 overflow-x-auto px-6 pb-8 scrollbar-thin sm:-mx-8 sm:px-8 lg:mt-14 lg:pb-12">
+      <div className="flex snap-x snap-mandatory gap-5 lg:gap-8">
         {posts.map((post) => (
           <PostCard key={post.slug} post={post} />
         ))}
