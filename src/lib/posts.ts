@@ -51,7 +51,7 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
   },
   {
     id: "zivot-tvorba",
-    label: "Život & Tvorba",
+    label: "Důvod, proč to děláme",
     tagline: "Proč tvořit, když žijeme.",
   },
 ];
