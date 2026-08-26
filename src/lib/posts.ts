@@ -36,7 +36,7 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
   },
   {
     id: "mluveni-s-ai",
-    label: "Jak mluvit s AI",
+    label: "Jak mluvit s robotem",
     tagline: "Prompt je dialog, ne příkaz.",
   },
   {
