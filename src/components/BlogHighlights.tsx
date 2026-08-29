@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ExternalLinkIcon } from "./icons";
+import TrackedArticleLink from "./TrackedArticleLink";
 import { useReveal } from "@/lib/use-reveal";
 
 const highlights = [
@@ -48,9 +49,9 @@ export default function BlogHighlights() {
 
         <div className="space-y-6">
           {highlights.map((post) => (
-            <Link
-              key={post.slug}
-              href={`/blog/${post.slug}`}
+            <TrackedArticleLink
+              slug={post.slug}
+              location="blog_highlights"
               className="group block rounded-xl p-5 transition-all duration-300"
               style={{
                 background: "var(--surface)",
@@ -75,7 +76,7 @@ export default function BlogHighlights() {
                   <ExternalLinkIcon size={14} />
                 </div>
               </div>
-            </Link>
+            </TrackedArticleLink>
           ))}
         </div>
       </div>

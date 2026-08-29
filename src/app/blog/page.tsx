@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import TrackedArticleLink from "@/components/TrackedArticleLink";
 import { getAllPosts, getBlogSections, BLOG_CATEGORIES, type PostMeta } from "@/lib/posts";
 
 export const metadata: Metadata = {
@@ -36,8 +37,9 @@ const featuredPost = getFeaturedPost(posts);
 /** Jedna karta článku — horizontálně scrollovatelná, Apple glass styl. */
 function PostCard({ post }: { post: PostMeta }) {
   return (
-    <Link
-      href={`/blog/${post.slug}`}
+    <TrackedArticleLink
+      slug={post.slug}
+      location="blog_index_card"
       className="group relative flex w-[80vw] max-w-[340px] shrink-0 snap-start flex-col justify-between rounded-[1.75rem] border border-[var(--border)] bg-[var(--surface)] p-7 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-2 hover:border-[rgba(200,150,46,0.45)] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.7)] max-sm:w-[84vw] sm:w-[60vw] sm:max-w-[360px] lg:w-[400px] lg:max-w-[400px] lg:p-10"
       aria-label={post.title}
     >
@@ -62,7 +64,7 @@ function PostCard({ post }: { post: PostMeta }) {
           </svg>
         </span>
       </div>
-    </Link>
+    </TrackedArticleLink>
   );
 }
 
@@ -103,8 +105,9 @@ export default function BlogPage() {
       {/* Featured */}
       {featuredPost && (
         <section className="container-apple px-6">
-          <Link
-            href={`/blog/${featuredPost.slug}`}
+          <TrackedArticleLink
+            slug={featuredPost.slug}
+            location="blog_index_featured"
             className="glass card-hover group block rounded-2xl border-l-2 border-l-[var(--gold)] p-6 sm:p-8"
           >
             <p className="eyebrow text-[var(--gold)]">Dnes doporučujeme</p>
@@ -112,7 +115,7 @@ export default function BlogPage() {
               {featuredPost.title}
             </h2>
             <p className="mt-3 max-w-2xl text-[var(--text-secondary)] leading-relaxed">{featuredPost.description}</p>
-          </Link>
+          </TrackedArticleLink>
         </section>
       )}
 

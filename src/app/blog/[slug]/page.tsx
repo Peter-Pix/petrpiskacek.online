@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import TrackedArticleLink from "@/components/TrackedArticleLink";
 import { getAllSlugs, getPost } from "@/lib/posts";
 
 export async function generateStaticParams() {
@@ -108,10 +109,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         {nextPost && (
           <section className="mt-16 rounded-lg border border-zinc-800 bg-zinc-900/30 p-5">
             <p className="text-xs font-medium uppercase tracking-wider text-amber-500">Další článek</p>
-            <Link href={`/blog/${nextPost.slug}`} className="group mt-2 block">
+            <TrackedArticleLink slug={nextPost.slug} location="blog_article_next" className="group mt-2 block">
               <h2 className="text-lg font-semibold group-hover:text-amber-500 transition-colors">{nextPost.title}</h2>
               <p className="mt-1 text-sm text-zinc-400 leading-relaxed">{nextPost.description}</p>
-            </Link>
+            </TrackedArticleLink>
           </section>
         )}
       </article>
