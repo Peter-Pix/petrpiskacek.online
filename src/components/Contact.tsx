@@ -16,7 +16,7 @@ export default function Contact() {
           Chceš to zkusit? Domluvíme se, co potřebuješ, a já ti ukážu, jak to udělat.
         </p>
         <a
-          href="mailto:ppix50@gmail.com"
+          href="mailto:info@petrpiskacek.cz"
           onClick={() => trackEvent("click_contact")}
           className="btn-apple btn-apple-primary inline-flex items-center gap-2"
         >

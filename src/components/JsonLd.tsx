@@ -8,7 +8,7 @@ export default function JsonLd() {
     alternateName: "Peter Pix",
     givenName: "Petr",
     familyName: "Piskáček",
-    email: "ppix50@gmail.com",
+    email: "info@petrpiskacek.cz",
     url: "https://petrpiskacek.online",
     sameAs: [
       "https://petrpiskacek.cz",
