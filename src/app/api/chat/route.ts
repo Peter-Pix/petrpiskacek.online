@@ -12,14 +12,14 @@ const PROVIDERS = [
   {
     name: "ollama" as const,
     url: "https://ollama.com/v1/chat/completions",
-    model: "deepseek-v4-flash:0731",
+    model: "deepseek-v4.1-flash",
     envKey: "OLLAMA_API_KEY",
     extraHeaders: {} as Record<string, string>,
   },
   {
     name: "openrouter" as const,
     url: "https://openrouter.ai/api/v1/chat/completions",
-    model: "deepseek/deepseek-chat-v3.1",
+    model: "openai/gpt-4.1-mini",
     envKey: "OPENROUTER_API_KEY",
     extraHeaders: {
       "HTTP-Referer": "https://petrpiskacek.online",
