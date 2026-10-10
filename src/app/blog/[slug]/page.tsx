@@ -31,6 +31,25 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+/** Vyrenderuje inline formátování: **bold** a *italic* uvnitř odstavce. */
+function renderInline(text: string, keyPrefix: string) {
+  // rozdělíme na tokeny podle **bold** a *italic*
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).filter(Boolean);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={`${keyPrefix}-b${i}`} className="font-semibold text-[var(--text)]">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith("*") && part.endsWith("*")) {
+      return <em key={`${keyPrefix}-i${i}`}>{part.slice(1, -1)}</em>;
+    }
+    return <span key={`${keyPrefix}-t${i}`}>{part}</span>;
+  });
+}
+
 function renderMdx(content: string) {
   const lines = content.split("\n");
   return lines.map((line, i) => {
@@ -47,13 +66,20 @@ function renderMdx(content: string) {
     if (line.startsWith("## ")) {
       return <h2 key={i} className="text-xl font-semibold text-[var(--text)] mt-10 mb-4">{line.replace(/^## /, "")}</h2>;
     }
-    if (line.startsWith("**") && line.endsWith("**")) {
+    if (line.startsWith("**") && line.endsWith("**") && !line.slice(2, -2).includes("**")) {
       return <p key={i} className="font-semibold text-[var(--text)] text-lg">{line.replace(/\*\*/g, "")}</p>;
     }
     if (line.startsWith("*") && line.endsWith("*") && !line.startsWith("**")) {
       return <p key={i} className="italic text-[var(--text-muted)]">{line.replace(/\*/g, "")}</p>;
     }
     if (line.startsWith("```")) {
+      // Zjisti, jestli je to otevírací nebo uzavírací fence (lichý/sudý výskyt).
+      const fencesBefore = lines.slice(0, i).filter((l) => l.startsWith("```")).length;
+      const isOpening = fencesBefore % 2 === 0;
+      if (!isOpening) {
+        // Uzavírací fence — přeskoč (obsah už zpracoval otevírací blok).
+        return null;
+      }
       const codeLines: string[] = [];
       let j = i + 1;
       while (j < lines.length && !lines[j].startsWith("```")) {
@@ -69,8 +95,23 @@ function renderMdx(content: string) {
       }
       return null;
     }
+    if (line.startsWith("- ")) {
+      const parts = line.slice(2).split("→");
+      return (
+        <p key={i} className="text-[var(--text-secondary)] pl-4 -indent-4">
+          <span className="text-[var(--gold)]">•</span>{" "}
+          {renderInline(parts[0].trim(), `li${i}`)}
+          {parts.length > 1 && (
+            <>
+              {" "}<span className="text-[var(--text-muted)]">→</span>{" "}
+              {renderInline(parts.slice(1).join("→").trim(), `li${i}r`)}
+            </>
+          )}
+        </p>
+      );
+    }
     if (line === "") return null;
-    return <p key={i} className="text-[var(--text-secondary)]">{line}</p>;
+    return <p key={i} className="text-[var(--text-secondary)]">{renderInline(line, `p${i}`)}</p>;
   });
 }
 
