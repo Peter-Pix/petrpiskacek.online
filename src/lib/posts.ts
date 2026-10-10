@@ -67,6 +67,7 @@ const SLUG_TO_CATEGORY: Record<string, string> = {
   "proc-mam-tolik-projektu": "agenti-automatizace",
   "ukaz-mi-tlacitko-schovej-tovarnu": "agenti-automatizace",
   "labuti-jezero": "agenti-automatizace",
+  "zustal-jsem-sam-v-mistnosti-plny-robotu": "agenti-automatizace",
 
   // Jak mluvit s AI
   "mluvime-s-kladivem": "mluveni-s-ai",
