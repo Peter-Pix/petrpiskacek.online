@@ -14,6 +14,9 @@ export interface PostMeta {
 export interface PostData extends PostMeta {
   content: string;
   nextPost?: string;
+  attachment?: string;
+  attachmentLabel?: string;
+  attachmentNote?: string;
 }
 
 export interface BlogCategory {
@@ -74,6 +77,7 @@ const SLUG_TO_CATEGORY: Record<string, string> = {
   "nenadavam-protoze-me-to-bavi": "mluveni-s-ai",
   "parak-kterej-nezavidi": "mluveni-s-ai",
   "ai-je-trochu-jako-sexy-holka": "mluveni-s-ai",
+  "proc-jsem-agentovi-napsal-ustavu": "mluveni-s-ai",
 
   // Přemýšlení & Mindset
   "obcas-je-dobry-mit-spatnej-napad": "mysleni",
@@ -189,5 +193,8 @@ export function getPost(slug: string): PostData | null {
     featured: frontmatter.featured === "true",
     content,
     nextPost: frontmatter.nextPost,
+    attachment: frontmatter.attachment,
+    attachmentLabel: frontmatter.attachmentLabel,
+    attachmentNote: frontmatter.attachmentNote,
   };
 }

@@ -33,8 +33,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 /** Vyrenderuje inline formátování: **bold** a *italic* uvnitř odstavce. */
 function renderInline(text: string, keyPrefix: string) {
-  // rozdělíme na tokeny podle **bold** a *italic*
-  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).filter(Boolean);
+  // rozdělíme na tokeny podle **bold**, *italic* a [text](url)
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g).filter(Boolean);
   return parts.map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
@@ -45,6 +45,14 @@ function renderInline(text: string, keyPrefix: string) {
     }
     if (part.startsWith("*") && part.endsWith("*")) {
       return <em key={`${keyPrefix}-i${i}`}>{part.slice(1, -1)}</em>;
+    }
+    const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (linkMatch) {
+      return (
+        <a key={`${keyPrefix}-a${i}`} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" className="text-[var(--gold)] underline underline-offset-4 decoration-[var(--gold)]/40 hover:decoration-[var(--gold)] transition-colors">
+          {linkMatch[1]}
+        </a>
+      );
     }
     return <span key={`${keyPrefix}-t${i}`}>{part}</span>;
   });
@@ -146,6 +154,28 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="mt-12 space-y-6 text-[1.0625rem] leading-relaxed text-[var(--text-secondary)] max-sm:text-[1rem]">
           {renderMdx(post.content)}
         </div>
+
+        {post.attachment && (
+          <section className="mt-16 rounded-lg border border-zinc-800 bg-zinc-900/30 p-5">
+            <p className="text-xs font-medium uppercase tracking-wider text-amber-500">Příloha</p>
+            <div className="mt-2 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-100">{post.attachmentLabel}</h2>
+                {post.attachmentNote && (
+                  <p className="mt-1 text-sm text-zinc-400 leading-relaxed">{post.attachmentNote}</p>
+                )}
+              </div>
+              <a
+                href={post.attachment}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 rounded-lg border border-amber-500/30 px-4 py-2 text-sm font-medium text-amber-500 transition-colors hover:bg-amber-500 hover:text-zinc-950"
+              >
+                Otevřít dokument
+              </a>
+            </div>
+          </section>
+        )}
 
         {nextPost && (
           <section className="mt-16 rounded-lg border border-zinc-800 bg-zinc-900/30 p-5">
